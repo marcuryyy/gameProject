@@ -1,22 +1,14 @@
 import pygame
 import random
+import antLangton
 
 
 class GameMapCreator:
     def __init__(self):
-        self._map = [[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-                     [2, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2],
-                     [2, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2],
-                     [2, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2],
-                     [2, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2],
-                     [2, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2],
-                     [2, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2],
-                     [2, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2],
-                     [2, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2],
-                     [2, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2],
-                     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]]
+        self._antLangton = antLangton.generateMap(pygame.time.get_ticks())
+        self._map = self._antLangton.runGenerate()
         self._water = pygame.image.load("background/Water.png")
-        self._road = pygame.image.load("background/Road.png")
+        self._road = pygame.image.load("background/swamp.png")
         self._grass = [pygame.image.load("background/Grass1.png"), pygame.image.load("background/Grass2.png"),
                        pygame.image.load("background/Grass3.png")]
         self._grassWidth, self._grassHeight = self._grass[0].get_width(), self._grass[0].get_height()
@@ -24,7 +16,7 @@ class GameMapCreator:
         self._roadWidth, self._roadHeight = self._road.get_width(), self._road.get_height()
         self._grass_tiles = [random.choice(self._grass) for _ in range(len(self._map) * len(self._map[0]))]
         self._tile_width, self._tile_height = 400, 400
-        self._tile_amount_x, self._tile_amount_y = 14, 11
+        self._tile_amount_x, self._tile_amount_y = len(self._map[0]), len(self._map)
 
     def fillMap(self, screen, cameraX, cameraY):
         grass_tile_index: int = 0

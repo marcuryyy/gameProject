@@ -36,9 +36,9 @@ class Player:
         if keys[pygame.K_LSHIFT]:
             self._isDashing = True
         if game_map.getMap()[int(self._y // game_map.getTileSize()[1])][int(self._x // game_map.getTileSize()[0])] == 1:
-            self._speed = 4
-        else:
             self._speed = 2
+        else:
+            self._speed = 4
         if (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]) and (keys[pygame.K_UP] or keys[pygame.K_DOWN]):
             self._speed = self._speed / (2 ** 0.5)
         if keys[pygame.K_LEFT]:
