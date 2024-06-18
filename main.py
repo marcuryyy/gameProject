@@ -6,6 +6,7 @@ import gameMap
 import player
 import diffProjectiles
 import math
+import random
 
 pygame.init()
 
@@ -49,23 +50,28 @@ class GameScene:
         self._camera_rect = pygame.Rect(0, 0, self._screen_rect.width, self._screen_rect.height)
         self._player = player.Player(self._screen)
         self._playerX, self._playerY = self._player.getCoordinates()
-        self._playerWeapon = self._player.getWeapon()
         self._closestEnemy = None
         self._projectiles: list[diffProjectiles.FireProjectile] = []
         self._cameraSpeed = 1
         self._enemyCounter = 0
-        self._maxEnemyCount = 10
+        self._difficulty: int = 2
+        self._lastHPTicks = 0
+        self._maxEnemyCount = self.setDifficulty(self._player.getHP(), self._player.getMaxHP(), pygame.time.get_ticks())
         self._enemies: list[Enemy.BaseEnemy] = []
         self._droppedGoods = []
         self._pets: list[diffProjectiles.BabyGhost] = []
-        self._petDict = {"GhostPet" : 0}
+        self._petDict = {"GhostPet": 0}
         self._clock = pygame.time.Clock()
         self._paused = False
         self._lastShotTicks = 0
 
+
     def run_game(self):
         while self._running and not self._paused:
             pygame.display.update()
+            self._maxEnemyCount = self.setDifficulty(self._player.getHP(), self._player.getMaxHP(),
+                                                     pygame.time.get_ticks())
+            print(self._maxEnemyCount)
             self._clock.tick(60)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -81,7 +87,7 @@ class GameScene:
             self._player.getHealthBar().draw(self._screen, self._player.getHP())
             self._player.getStaminaBar().draw(self._screen, self._player.getSTAMINA())
             if self._enemyCounter < self._maxEnemyCount:
-                self._enemies.append(Enemy.EasyEnemy(self._screen))
+                self._enemies.append(random.choice([Enemy.GhostEnemy(self._screen), Enemy.ZombieEnemy(self._screen)]))
                 self._enemyCounter += 1
             closest_distance = float('inf')
             for enemy in self._enemies:
@@ -155,6 +161,51 @@ class GameScene:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self._paused = False
+
+    def setDifficulty(self, player_health: int, player_max_health: int, ticks: int):
+        difficulty: list = ["Very Easy", "Easy", "Medium", "Hard", "Very Hard", "Nearly Impossible", "Impossible"]
+        enemyAmount: dict = {"Very Easy": 5, "Easy": 10, "Medium": 12, "Hard": 15,
+                            "Very Hard": 17, "Nearly Impossible": 20, "Impossible": 25}
+        if self._lastHPTicks == 0:
+            self._lastHPTicks += 1
+            return enemyAmount[difficulty[self._difficulty]]
+        else:
+            if ticks - self._lastHPTicks >= 10000:
+                if player_max_health - player_health <= 50:
+                    if (len(difficulty)-1) - self._difficulty >= 3:
+                        self._difficulty += 3
+                    else:
+                        self._difficulty = len(difficulty)-1
+                elif 50 < player_max_health - player_health <= 100:
+                    if (len(difficulty)-1) - self._difficulty >= 2:
+                        self._difficulty += 2
+                    else:
+                        self._difficulty = len(difficulty)-1
+                elif 100 < player_max_health - player_health <= 150:
+                    if (len(difficulty)-1) - self._difficulty >= 1:
+                        self._difficulty += 1
+                    else:
+                        self._difficulty = len(difficulty)-1
+                elif 150 < player_max_health - player_health <= 200:
+                    pass
+                elif 200 < player_max_health - player_health <= 275:
+                    if self._difficulty >= 1:
+                        self._difficulty -= 1
+                elif 275 < player_max_health - player_health <= 375:
+                    if self._difficulty >= 2:
+                        self._difficulty -= 2
+                    else:
+                        self._difficulty = 0
+                else:
+                    if self._difficulty >= 3:
+                        self._difficulty -= 3
+                    else:
+                        self._difficulty = 0
+                self._lastHPTicks = ticks
+            return enemyAmount[difficulty[self._difficulty]]
+
+
+
 
 
 class Button(ABC):
