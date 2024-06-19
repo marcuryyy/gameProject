@@ -7,6 +7,8 @@ from abc import ABC, abstractmethod
 
 from numpy import ndarray
 
+import player
+
 
 class DropBase(ABC):
     @abstractmethod
@@ -19,38 +21,39 @@ class DropBase(ABC):
 
 
 class HealthRegeneration(DropBase):
-    def __init__(self, screen, x, y):
-        self._image = pygame.Surface((25, 25))
+    def __init__(self, screen: pygame.Surface, x: int, y: int):
+        self._image: pygame.Surface = pygame.Surface((25, 25))
         self._image.fill("red")
-        self._hitbox = self._image.get_rect()
+        self._hitbox: pygame.Rect = self._image.get_rect()
         self._x, self._y = x, y
-        self._screen = screen
-        self._healthBoost = 50
+        self._screen: pygame.Surface = screen
+        self._healthBoost: int = 50
 
-    def update(self, cameraX, cameraY):
+    def update(self, cameraX: int, cameraY: int):
         self._screen.blit(self._image, (self._x - cameraX, self._y - cameraY))
         self._hitbox.topleft = (self._x, self._y)
 
-    def onPickUp(self, player):
+    def onPickUp(self, player: player.Player) -> bool:
         if self._hitbox.colliderect(player.getHitbox()):
             player.addHealth(self._healthBoost)
             return True
+        return False
 
 
 class GhostPet(DropBase):
-    def __init__(self, screen, x, y):
-        self._image = pygame.Surface((25, 25))
+    def __init__(self, screen: pygame.Surface, x: int, y: int):
+        self._image: pygame.Surface = pygame.Surface((25, 25))
         self._image.fill("gray")
-        self._hitbox = self._image.get_rect()
+        self._hitbox: pygame.Rect = self._image.get_rect()
         self._x, self._y = x, y
-        self._screen = screen
-        self._healthBoost = 50
+        self._screen: pygame.Surface = screen
+        self._healthBoost: int = 50
 
-    def update(self, cameraX, cameraY):
+    def update(self, cameraX: int, cameraY: int):
         self._screen.blit(self._image, (self._x - cameraX, self._y - cameraY))
         self._hitbox.topleft = (self._x, self._y)
 
-    def onPickUp(self, player):
+    def onPickUp(self, player: player.Player) -> str:
         if self._hitbox.colliderect(player.getHitbox()):
             return "GhostPet"
 

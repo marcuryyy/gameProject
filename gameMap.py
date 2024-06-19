@@ -6,19 +6,20 @@ import antLangton
 class GameMapCreator:
     def __init__(self):
         self._antLangton = antLangton.generateMap(pygame.time.get_ticks())
-        self._map = self._antLangton.runGenerate()
-        self._water = pygame.image.load("background/Water.png")
-        self._road = pygame.image.load("background/swamp.png")
-        self._grass = [pygame.image.load("background/Grass1.png"), pygame.image.load("background/Grass2.png"),
-                       pygame.image.load("background/Grass3.png")]
+        self._map: list[list[int]] = self._antLangton.runGenerate()
+        self._water: pygame.Surface = pygame.image.load("background/Water.png")
+        self._road: pygame.Surface = pygame.image.load("background/swamp.png")
+        self._grass: list[pygame.Surface] = [pygame.image.load("background/Grass1.png"),
+                                             pygame.image.load("background/Grass2.png"),
+                                             pygame.image.load("background/Grass3.png")]
         self._grassWidth, self._grassHeight = self._grass[0].get_width(), self._grass[0].get_height()
         self._waterWidth, self._waterHeight = self._water.get_width(), self._water.get_height()
         self._roadWidth, self._roadHeight = self._road.get_width(), self._road.get_height()
-        self._grass_tiles = [random.choice(self._grass) for _ in range(len(self._map) * len(self._map[0]))]
+        self._grass_tiles: list[pygame.Surface] = [random.choice(self._grass) for _ in range(len(self._map) * len(self._map[0]))]
         self._tile_width, self._tile_height = 400, 400
         self._tile_amount_x, self._tile_amount_y = len(self._map[0]), len(self._map)
 
-    def fillMap(self, screen, cameraX, cameraY):
+    def fillMap(self, screen: pygame.Surface, cameraX: int, cameraY: int):
         grass_tile_index: int = 0
         for y, line in enumerate(self._map):
             for x, tile in enumerate(line):
@@ -31,11 +32,11 @@ class GameMapCreator:
                                 (x * self._grassWidth - cameraX, y * self._grassHeight - cameraY))
                     grass_tile_index += 1
 
-    def getMap(self):
+    def getMap(self) -> list[list[int]]:
         return self._map
 
-    def getTileSize(self):
+    def getTileSize(self) -> tuple[int, int]:
         return self._tile_width, self._tile_height
 
-    def getTileAmount(self):
+    def getTileAmount(self) -> tuple[int, int]:
         return self._tile_amount_x, self._tile_amount_y

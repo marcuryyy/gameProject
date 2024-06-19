@@ -16,19 +16,19 @@ class Settings:
 class generateMap(Settings):
     def __init__(self, ticks: int | float):
         super().__init__()
-        self.grid = [[self.black for _ in range(self.width // 10)] for _ in range(self.height // 10)]
-        self.ant_x = self.width // 20
-        self.ant_y = self.height // 20
-        self.ant_direction = 0
+        self.grid: list[list] = [[self.black for _ in range(self.width // 10)] for _ in range(self.height // 10)]
+        self.ant_x: int = self.width // 20
+        self.ant_y: int = self.height // 20
+        self.ant_direction: int = 0
 
-        self.target_ratio = 10/100
+        self.target_ratio: int | float = 10/100
 
-        self.white_ratio = 0
-        self.map = [[0] * (self.width // 10) for i in range(self.height // 10)]
+        self.white_ratio: int = 0
+        self.map: list[list[int]] = [[0] * (self.width // 10) for i in range(self.height // 10)]
 
-        self.ticks = ticks
+        self.ticks: int = ticks
 
-    def update_ant(self, x, y, direction, grid, white_ratio, target_ratio):
+    def update_ant(self, x: int, y: int, direction: int, grid: list[list], white_ratio: int, target_ratio: int | float) -> tuple[int, int, int, int]:
         if grid[y][x] == self.black:
             direction = (direction + 1) % 4
             grid[y][x] = self.white

@@ -53,43 +53,43 @@ class BaseEnemy(ABC):
 
 
 class GhostEnemy(BaseEnemy):
-    def __init__(self, screen):
-        self._screen = screen
-        self._runFramesRight = ["Enemies/Ghost/GhostAnimations/rightRun/run1.png",
-                                "Enemies/Ghost/GhostAnimations/rightRun/run2.png",
-                                "Enemies/Ghost/GhostAnimations/rightRun/run3.png",
-                                "Enemies/Ghost/GhostAnimations/rightRun/run4.png",
-                                "Enemies/Ghost/GhostAnimations/rightRun/run5.png",
-                                "Enemies/Ghost/GhostAnimations/rightRun/run6.png",
-                                "Enemies/Ghost/GhostAnimations/rightRun/run7.png",
-                                "Enemies/Ghost/GhostAnimations/rightRun/run8.png",
-                                "Enemies/Ghost/GhostAnimations/rightRun/run9.png",
-                                "Enemies/Ghost/GhostAnimations/rightRun/run10.png",
-                                "Enemies/Ghost/GhostAnimations/rightRun/run11.png",
-                                "Enemies/Ghost/GhostAnimations/rightRun/run12.png",
-                                ]
-        self._runFrameRight = 0
-        self._runFramesLeft = ["Enemies/Ghost/GhostAnimations/leftRun/run1.png",
-                               "Enemies/Ghost/GhostAnimations/leftRun/run2.png",
-                               "Enemies/Ghost/GhostAnimations/leftRun/run3.png",
-                               "Enemies/Ghost/GhostAnimations/leftRun/run4.png",
-                               "Enemies/Ghost/GhostAnimations/leftRun/run5.png",
-                               "Enemies/Ghost/GhostAnimations/leftRun/run6.png",
-                               "Enemies/Ghost/GhostAnimations/leftRun/run7.png",
-                               "Enemies/Ghost/GhostAnimations/leftRun/run8.png",
-                               "Enemies/Ghost/GhostAnimations/leftRun/run9.png",
-                               "Enemies/Ghost/GhostAnimations/leftRun/run10.png",
-                               "Enemies/Ghost/GhostAnimations/leftRun/run11.png",
-                               "Enemies/Ghost/GhostAnimations/leftRun/run12.png",
-                               ]
-        self._runFrameLeft = 0
-        self.enemy_image = pygame.image.load(self._runFramesRight[0])
-        self._hitbox = pygame.Rect((0, 0), (80, 110))
+    def __init__(self, screen: pygame.Surface):
+        self._screen: pygame.Surface = screen
+        self._runFramesRight: list[str] = ["Enemies/Ghost/GhostAnimations/rightRun/run1.png",
+                                           "Enemies/Ghost/GhostAnimations/rightRun/run2.png",
+                                           "Enemies/Ghost/GhostAnimations/rightRun/run3.png",
+                                           "Enemies/Ghost/GhostAnimations/rightRun/run4.png",
+                                           "Enemies/Ghost/GhostAnimations/rightRun/run5.png",
+                                           "Enemies/Ghost/GhostAnimations/rightRun/run6.png",
+                                           "Enemies/Ghost/GhostAnimations/rightRun/run7.png",
+                                           "Enemies/Ghost/GhostAnimations/rightRun/run8.png",
+                                           "Enemies/Ghost/GhostAnimations/rightRun/run9.png",
+                                           "Enemies/Ghost/GhostAnimations/rightRun/run10.png",
+                                           "Enemies/Ghost/GhostAnimations/rightRun/run11.png",
+                                           "Enemies/Ghost/GhostAnimations/rightRun/run12.png",
+                                           ]
+        self._runFrameRight: int = 0
+        self._runFramesLeft: list[str] = ["Enemies/Ghost/GhostAnimations/leftRun/run1.png",
+                                          "Enemies/Ghost/GhostAnimations/leftRun/run2.png",
+                                          "Enemies/Ghost/GhostAnimations/leftRun/run3.png",
+                                          "Enemies/Ghost/GhostAnimations/leftRun/run4.png",
+                                          "Enemies/Ghost/GhostAnimations/leftRun/run5.png",
+                                          "Enemies/Ghost/GhostAnimations/leftRun/run6.png",
+                                          "Enemies/Ghost/GhostAnimations/leftRun/run7.png",
+                                          "Enemies/Ghost/GhostAnimations/leftRun/run8.png",
+                                          "Enemies/Ghost/GhostAnimations/leftRun/run9.png",
+                                          "Enemies/Ghost/GhostAnimations/leftRun/run10.png",
+                                          "Enemies/Ghost/GhostAnimations/leftRun/run11.png",
+                                          "Enemies/Ghost/GhostAnimations/leftRun/run12.png",
+                                          ]
+        self._runFrameLeft: int = 0
+        self.enemy_image: pygame.Surface = pygame.image.load(self._runFramesRight[0])
+        self._hitbox: pygame.Rect = pygame.Rect((0, 0), (80, 110))
         self._x, self._y = 0, 0
-        self.speed = 2.5
-        self._health = 10
-        self._isDrawn = False
-        self._damage = 1
+        self.speed: int | float = 2.5
+        self._health: int = 10
+        self._isDrawn: bool = False
+        self._damage: int = 1
 
     def draw(self, playerX: int | float, playerY: int | float, cameraX: int | float, cameraY: int | float,
              tileSize: tuple[int], tileAmount: tuple[int], screenSize: tuple[int]):
@@ -110,7 +110,7 @@ class GhostEnemy(BaseEnemy):
         self._screen.blit(self.enemy_image, (self._x - cameraX, self._y - cameraY))
         self._hitbox.topleft = (self._x, self._y)
 
-    def followPlayer(self, player, x, y, cameraX, cameraY):
+    def followPlayer(self, player: player.Player, x: int | float, y: int | float, cameraX: int, cameraY: int):
         if not self._hitbox.colliderect(player.getHitbox()):
             dx, dy = x - self._x, y - self._y
             vector_length = math.hypot(dx, dy)
@@ -130,7 +130,7 @@ class GhostEnemy(BaseEnemy):
         self._screen.blit(self.enemy_image, (self._x - cameraX, self._y - cameraY))
         self._hitbox.topleft = (self._x + 50, self._y)
 
-    def getDrawState(self):
+    def getDrawState(self) -> bool:
         return self._isDrawn
 
     def setDrawState(self):
@@ -144,16 +144,16 @@ class GhostEnemy(BaseEnemy):
         self.enemy_image = pygame.image.load(self._runFramesRight[0])
         self._health -= amount
 
-    def getHitbox(self):
+    def getHitbox(self) -> pygame.Rect:
         return self._hitbox
 
-    def getHP(self):
+    def getHP(self) -> int:
         return self._health
 
-    def getCoordinates(self):
+    def getCoordinates(self) -> tuple[int, int]:
         return self._x, self._y
 
-    def dropGoods(self, screen, x, y, petAmount: dict[str, int]):
+    def dropGoods(self, screen: pygame.Surface, x: int, y: int, petAmount: dict[str, int]) -> drops:
         goods = None
         chances: tuple = pseudoRandom.getChances()
         if random.choice(chances[0]) == 1:
@@ -168,35 +168,35 @@ class GhostEnemy(BaseEnemy):
 
 
 class ZombieEnemy(BaseEnemy):
-    def __init__(self, screen):
-        self._screen = screen
-        self._runFramesRight = ["Enemies/Zombie/ZombieAnimations/rightRun/run1.png",
-                                "Enemies/Zombie/ZombieAnimations/rightRun/run2.png",
-                                "Enemies/Zombie/ZombieAnimations/rightRun/run3.png",
-                                "Enemies/Zombie/ZombieAnimations/rightRun/run4.png",
-                                "Enemies/Zombie/ZombieAnimations/rightRun/run5.png",
-                                "Enemies/Zombie/ZombieAnimations/rightRun/run6.png",
-                                "Enemies/Zombie/ZombieAnimations/rightRun/run7.png",
-                                "Enemies/Zombie/ZombieAnimations/rightRun/run8.png"
-                                ]
-        self._runFrameRight = 0
-        self._runFramesLeft = ["Enemies/Zombie/ZombieAnimations/leftRun/run1.png",
-                               "Enemies/Zombie/ZombieAnimations/leftRun/run2.png",
-                               "Enemies/Zombie/ZombieAnimations/leftRun/run3.png",
-                               "Enemies/Zombie/ZombieAnimations/leftRun/run4.png",
-                               "Enemies/Zombie/ZombieAnimations/leftRun/run5.png",
-                               "Enemies/Zombie/ZombieAnimations/leftRun/run6.png",
-                               "Enemies/Zombie/ZombieAnimations/leftRun/run7.png",
-                               "Enemies/Zombie/ZombieAnimations/leftRun/run8.png"
-                               ]
-        self._runFrameLeft = 0
-        self.enemy_image = pygame.image.load(self._runFramesLeft[0])
-        self._hitbox = pygame.Rect((30, 0), (70, 80))
+    def __init__(self, screen: pygame.Surface):
+        self._screen: pygame.Surface = screen
+        self._runFramesRight: list[str] = ["Enemies/Zombie/ZombieAnimations/rightRun/run1.png",
+                                           "Enemies/Zombie/ZombieAnimations/rightRun/run2.png",
+                                           "Enemies/Zombie/ZombieAnimations/rightRun/run3.png",
+                                           "Enemies/Zombie/ZombieAnimations/rightRun/run4.png",
+                                           "Enemies/Zombie/ZombieAnimations/rightRun/run5.png",
+                                           "Enemies/Zombie/ZombieAnimations/rightRun/run6.png",
+                                           "Enemies/Zombie/ZombieAnimations/rightRun/run7.png",
+                                           "Enemies/Zombie/ZombieAnimations/rightRun/run8.png"
+                                           ]
+        self._runFrameRight: int = 0
+        self._runFramesLeft: list[str] = ["Enemies/Zombie/ZombieAnimations/leftRun/run1.png",
+                                          "Enemies/Zombie/ZombieAnimations/leftRun/run2.png",
+                                          "Enemies/Zombie/ZombieAnimations/leftRun/run3.png",
+                                          "Enemies/Zombie/ZombieAnimations/leftRun/run4.png",
+                                          "Enemies/Zombie/ZombieAnimations/leftRun/run5.png",
+                                          "Enemies/Zombie/ZombieAnimations/leftRun/run6.png",
+                                          "Enemies/Zombie/ZombieAnimations/leftRun/run7.png",
+                                          "Enemies/Zombie/ZombieAnimations/leftRun/run8.png"
+                                          ]
+        self._runFrameLeft: int = 0
+        self.enemy_image: pygame.Surface = pygame.image.load(self._runFramesLeft[0])
+        self._hitbox: pygame.Rect = pygame.Rect((30, 0), (70, 80))
         self._x, self._y = 0, 0
-        self.speed = 1.5
-        self._health = 10
-        self._isDrawn = False
-        self._damage = 3.5
+        self.speed: int | float = 1.5
+        self._health: int = 10
+        self._isDrawn: bool = False
+        self._damage: int | float = 3.5
 
     def draw(self, playerX: int | float, playerY: int | float, cameraX: int | float, cameraY: int | float,
              tileSize: tuple[int], tileAmount: tuple[int], screenSize: tuple[int]):
@@ -217,7 +217,7 @@ class ZombieEnemy(BaseEnemy):
         self._screen.blit(self.enemy_image, (self._x - cameraX, self._y - cameraY))
         self._hitbox.topleft = (self._x, self._y)
 
-    def followPlayer(self, player, x, y, cameraX, cameraY):
+    def followPlayer(self, player: player.Player, x: int | float, y: int | float, cameraX: int, cameraY: int):
         if not self._hitbox.colliderect(player.getHitbox()):
             dx, dy = x - self._x, y - self._y
             vector_length = math.hypot(dx, dy)
@@ -238,7 +238,7 @@ class ZombieEnemy(BaseEnemy):
         self._hitbox.topleft = (self._x + 30, self._y + 30)
         self.enemy_image = self.enemy_image = pygame.image.load(self._runFramesLeft[0])
 
-    def getDrawState(self):
+    def getDrawState(self) -> bool:
         return self._isDrawn
 
     def setDrawState(self):
@@ -252,16 +252,16 @@ class ZombieEnemy(BaseEnemy):
         self.enemy_image = self.enemy_image = pygame.image.load(self._runFramesLeft[0])
         self._health -= amount
 
-    def getHitbox(self):
+    def getHitbox(self) -> pygame.Rect:
         return self._hitbox
 
-    def getHP(self):
+    def getHP(self) -> int:
         return self._health
 
-    def getCoordinates(self):
+    def getCoordinates(self) -> tuple[int, int]:
         return self._x, self._y
 
-    def dropGoods(self, screen, x, y, petAmount: dict[str, int]):
+    def dropGoods(self, screen: pygame.Surface, x: int, y: int, petAmount: dict[str, int]) -> drops:
         goods = None
         if random.randint(1, 2) == 2:
             goods = drops.HealthRegeneration(screen, x, y)

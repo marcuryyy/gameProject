@@ -9,18 +9,25 @@ import math
 import random
 
 pygame.init()
+pygame.font.init()
 
 
 class MainMenu:
     def __init__(self):
-        self._screen = pygame.display.set_mode((750, 750))
+        self._screen: pygame.Surface = pygame.display.set_mode((750, 750))
         self._screen.fill("Black")
-        self._playbutton = PlayButton(50, 50)
-        self._buttons: list[Button] = [self._playbutton]
+        self._playbutton = PlayButton(self._screen, 250, 50)
+        self._skillsButton = SkillsButton(self._screen, 250, 50)
+        self._SettingsButton = SettingsButton(self._screen, 250, 50)
+        self._QuitButton = QuitButton(self._screen, 250, 50)
+        self._buttons: list[Button] = [self._playbutton, self._skillsButton, self._SettingsButton, self._QuitButton]
         self._runMenu: bool = True
 
     def runMenu(self):
         self._playbutton.draw()
+        self._skillsButton.draw()
+        self._SettingsButton.draw()
+        self._QuitButton.draw()
         while self._runMenu:
             pygame.display.update()
             for event in pygame.event.get():
@@ -30,10 +37,10 @@ class MainMenu:
                     for button in self._buttons:
                         button.do_on_click(event)
 
-    def getScreen(self):
+    def getScreen(self) -> pygame.Surface:
         return self._screen
 
-    def getState(self):
+    def getState(self) -> bool:
         return self._runMenu
 
     def setState(self, state: bool):
@@ -42,8 +49,8 @@ class MainMenu:
 
 class GameScene:
     def __init__(self):
-        self._mapCreator = gameMap.GameMapCreator()
-        self._map = self._mapCreator.getMap()
+        self._mapCreator = None
+        self._map = None
         self._screen = mainmenu.getScreen()
         self._running: bool = False
         self._screen_rect = pygame.display.get_surface().get_rect()
@@ -57,7 +64,8 @@ class GameScene:
         self._enemyCounter: int = 0
         self._difficulty: int = 2
         self._lastHPTicks: int = 0
-        self._maxEnemyCount: int = self.setDifficulty(self._player.getHP(), self._player.getMaxHP(), pygame.time.get_ticks())
+        self._maxEnemyCount: int = self.setDifficulty(self._player.getHP(), self._player.getMaxHP(),
+                                                      pygame.time.get_ticks())
         self._enemies: list[Enemy.BaseEnemy] = []
         self._droppedGoods: list[drops] = []
         self._pets: list[diffProjectiles.BabyGhost] = []
@@ -67,6 +75,8 @@ class GameScene:
         self._lastShotTicks: int = 0
 
     def run_game(self):
+        self._mapCreator = gameMap.GameMapCreator()
+        self._map = self._mapCreator.getMap()
         self._clock.tick(60)
         while self._running and not self._paused:
             pygame.display.update()
@@ -103,7 +113,7 @@ class GameScene:
                     if event.key == pygame.K_ESCAPE:
                         self._paused = False
 
-    def setDifficulty(self, player_health: int, player_max_health: int, ticks: int):
+    def setDifficulty(self, player_health: int, player_max_health: int, ticks: int) -> int:
         difficulty: list = ["Very Easy", "Easy", "Medium", "Hard", "Very Hard", "Nearly Impossible", "Impossible"]
         enemyAmount: dict = {"Very Easy": 7, "Easy": 12, "Medium": 17, "Hard": 22,
                              "Very Hard": 27, "Nearly Impossible": 32, "Impossible": 40}
@@ -223,35 +233,110 @@ class GameScene:
 
 
 class Button(ABC):
-    @abstractmethod
-    def __init__(self, width, height):
-        pass
+    def __init__(self):
+        self._font: pygame.font.Font = pygame.font.SysFont(None, 50)
 
     @abstractmethod
     def draw(self):
         pass
 
     @abstractmethod
-    def do_on_click(self, event: pygame.event):
+    def do_on_click(self, event: pygame.event.Event):
         pass
 
 
 class PlayButton(Button):
-    def __init__(self, width, height):
+    def __init__(self, screen: pygame.Surface, width: int, height: int):
+        super().__init__()
+        self._screen = screen
         self._width: int = width
         self._height: int = height
-        self._button = None
+        self._button = pygame.Rect((screen.get_size()[0] // 2 - width // 2, screen.get_size()[1] // 2 - height // 2),
+                                   (self._width, self._height))
+        self._text: pygame.Surface = self._font.render("Играть", True, "black")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
 
     def draw(self):
-        self._button = pygame.Rect((0, 0), (self._width, self._height))
         pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
+        self._screen.blit(self._text, self._text_rectangle)
         pygame.display.update()
 
-    def do_on_click(self, event):
+    def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
             if mainmenu.getState():
                 mainmenu.setState(False)
                 gameScene.setState(True)
+
+
+class SkillsButton(Button):
+    def __init__(self, screen: pygame.Surface, width: int, height: int):
+        super().__init__()
+        self._screen = screen
+        self._width: int = width
+        self._height: int = height
+        self._button = pygame.Rect(
+            (screen.get_size()[0] // 2 - width // 2, screen.get_size()[1] // 2 - height // 2 + height * 1.5),
+            (self._width, self._height))
+        self._text: pygame.Surface = self._font.render("Навыки", True, "black")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
+
+    def draw(self):
+        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
+        self._screen.blit(self._text, self._text_rectangle)
+        pygame.display.update()
+
+    def do_on_click(self, event: pygame.event.Event):
+        if self._button.collidepoint(event.pos):
+            if mainmenu.getState():
+                mainmenu.setState(False)
+                gameScene.setState(True)
+
+
+class SettingsButton(Button):
+    def __init__(self, screen: pygame.Surface, width: int, height: int):
+        super().__init__()
+        self._screen = screen
+        self._width: int = width
+        self._height: int = height
+        self._button = pygame.Rect(
+            (screen.get_size()[0] // 2 - width // 2, screen.get_size()[1] // 2 - height // 2 + height * 3),
+            (self._width, self._height))
+        self._text: pygame.Surface = self._font.render("Настройки", True, "black")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
+
+    def draw(self):
+        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
+        self._screen.blit(self._text, self._text_rectangle)
+        pygame.display.update()
+
+    def do_on_click(self, event: pygame.event.Event):
+        if self._button.collidepoint(event.pos):
+            if mainmenu.getState():
+                mainmenu.setState(False)
+                gameScene.setState(True)
+
+
+class QuitButton(Button):
+    def __init__(self, screen: pygame.Surface, width: int, height: int):
+        super().__init__()
+        self._screen = screen
+        self._width: int = width
+        self._height: int = height
+        self._button = pygame.Rect(
+            (screen.get_size()[0] // 2 - width // 2, screen.get_size()[1] // 2 - height // 2 + height * 4.5),
+            (self._width, self._height))
+        self._text: pygame.Surface = self._font.render("Выйти", True, "black")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
+
+    def draw(self):
+        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
+        self._screen.blit(self._text, self._text_rectangle)
+        pygame.display.update()
+
+    def do_on_click(self, event: pygame.event.Event):
+        if self._button.collidepoint(event.pos):
+            if mainmenu.getState():
+                pygame.quit()
 
 
 mainmenu = MainMenu()
