@@ -24,7 +24,7 @@ class generateMap(Settings):
         self.target_ratio = 10/100
 
         self.white_ratio = 0
-        self.map = [[0] * 22 for i in range(22)]
+        self.map = [[0] * (self.width // 10) for i in range(self.height // 10)]
 
         self.ticks = ticks
 

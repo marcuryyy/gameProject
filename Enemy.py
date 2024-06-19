@@ -4,6 +4,8 @@ import random
 import drops
 import player
 import math
+import numpy
+
 pygame.init()
 
 
@@ -54,35 +56,35 @@ class GhostEnemy(BaseEnemy):
     def __init__(self, screen):
         self._screen = screen
         self._runFramesRight = ["Enemies/Ghost/GhostAnimations/rightRun/run1.png",
-                          "Enemies/Ghost/GhostAnimations/rightRun/run2.png",
-                          "Enemies/Ghost/GhostAnimations/rightRun/run3.png",
-                          "Enemies/Ghost/GhostAnimations/rightRun/run4.png",
-                          "Enemies/Ghost/GhostAnimations/rightRun/run5.png",
-                          "Enemies/Ghost/GhostAnimations/rightRun/run6.png",
-                          "Enemies/Ghost/GhostAnimations/rightRun/run7.png",
-                          "Enemies/Ghost/GhostAnimations/rightRun/run8.png",
-                          "Enemies/Ghost/GhostAnimations/rightRun/run9.png",
-                          "Enemies/Ghost/GhostAnimations/rightRun/run10.png",
-                          "Enemies/Ghost/GhostAnimations/rightRun/run11.png",
+                                "Enemies/Ghost/GhostAnimations/rightRun/run2.png",
+                                "Enemies/Ghost/GhostAnimations/rightRun/run3.png",
+                                "Enemies/Ghost/GhostAnimations/rightRun/run4.png",
+                                "Enemies/Ghost/GhostAnimations/rightRun/run5.png",
+                                "Enemies/Ghost/GhostAnimations/rightRun/run6.png",
+                                "Enemies/Ghost/GhostAnimations/rightRun/run7.png",
+                                "Enemies/Ghost/GhostAnimations/rightRun/run8.png",
+                                "Enemies/Ghost/GhostAnimations/rightRun/run9.png",
+                                "Enemies/Ghost/GhostAnimations/rightRun/run10.png",
+                                "Enemies/Ghost/GhostAnimations/rightRun/run11.png",
                                 "Enemies/Ghost/GhostAnimations/rightRun/run12.png",
                                 ]
         self._runFrameRight = 0
         self._runFramesLeft = ["Enemies/Ghost/GhostAnimations/leftRun/run1.png",
-                                "Enemies/Ghost/GhostAnimations/leftRun/run2.png",
-                                "Enemies/Ghost/GhostAnimations/leftRun/run3.png",
-                                "Enemies/Ghost/GhostAnimations/leftRun/run4.png",
-                                "Enemies/Ghost/GhostAnimations/leftRun/run5.png",
-                                "Enemies/Ghost/GhostAnimations/leftRun/run6.png",
-                                "Enemies/Ghost/GhostAnimations/leftRun/run7.png",
-                                "Enemies/Ghost/GhostAnimations/leftRun/run8.png",
-                                "Enemies/Ghost/GhostAnimations/leftRun/run9.png",
-                                "Enemies/Ghost/GhostAnimations/leftRun/run10.png",
-                                "Enemies/Ghost/GhostAnimations/leftRun/run11.png",
-                                "Enemies/Ghost/GhostAnimations/leftRun/run12.png",
-                                ]
+                               "Enemies/Ghost/GhostAnimations/leftRun/run2.png",
+                               "Enemies/Ghost/GhostAnimations/leftRun/run3.png",
+                               "Enemies/Ghost/GhostAnimations/leftRun/run4.png",
+                               "Enemies/Ghost/GhostAnimations/leftRun/run5.png",
+                               "Enemies/Ghost/GhostAnimations/leftRun/run6.png",
+                               "Enemies/Ghost/GhostAnimations/leftRun/run7.png",
+                               "Enemies/Ghost/GhostAnimations/leftRun/run8.png",
+                               "Enemies/Ghost/GhostAnimations/leftRun/run9.png",
+                               "Enemies/Ghost/GhostAnimations/leftRun/run10.png",
+                               "Enemies/Ghost/GhostAnimations/leftRun/run11.png",
+                               "Enemies/Ghost/GhostAnimations/leftRun/run12.png",
+                               ]
         self._runFrameLeft = 0
         self.enemy_image = pygame.image.load(self._runFramesRight[0])
-        self._hitbox = pygame.Rect((0, 0), (80, 130))
+        self._hitbox = pygame.Rect((0, 0), (80, 110))
         self._x, self._y = 0, 0
         self.speed = 2.5
         self._health = 10
@@ -126,7 +128,7 @@ class GhostEnemy(BaseEnemy):
                 self._runFrameLeft = 0
             self.enemy_image = pygame.image.load(self._runFramesLeft[int(self._runFrameLeft)])
         self._screen.blit(self.enemy_image, (self._x - cameraX, self._y - cameraY))
-        self._hitbox.topleft = (self._x, self._y)
+        self._hitbox.topleft = (self._x + 50, self._y)
 
     def getDrawState(self):
         return self._isDrawn
@@ -153,10 +155,15 @@ class GhostEnemy(BaseEnemy):
 
     def dropGoods(self, screen, x, y, petAmount: dict[str, int]):
         goods = None
-        if random.randint(1, 2) == 2:
+        chances: tuple = pseudoRandom.getChances()
+        if random.choice(chances[0]) == 1:
             goods = drops.HealthRegeneration(screen, x, y)
-        elif random.randint(1, 2) == 2 and petAmount["GhostPet"] < 1:
+            pseudoRandom.countChances("boost", True)
+        elif random.choice(chances[1]) and petAmount["GhostPet"] < 1:
             goods = drops.GhostPet(screen, x, y)
+            pseudoRandom.countChances("pet", True)
+        else:
+            pseudoRandom.countChances("None", False)
         return goods
 
 
@@ -164,14 +171,14 @@ class ZombieEnemy(BaseEnemy):
     def __init__(self, screen):
         self._screen = screen
         self._runFramesRight = ["Enemies/Zombie/ZombieAnimations/rightRun/run1.png",
-                               "Enemies/Zombie/ZombieAnimations/rightRun/run2.png",
-                               "Enemies/Zombie/ZombieAnimations/rightRun/run3.png",
-                               "Enemies/Zombie/ZombieAnimations/rightRun/run4.png",
-                               "Enemies/Zombie/ZombieAnimations/rightRun/run5.png",
-                               "Enemies/Zombie/ZombieAnimations/rightRun/run6.png",
-                               "Enemies/Zombie/ZombieAnimations/rightRun/run7.png",
-                               "Enemies/Zombie/ZombieAnimations/rightRun/run8.png"
-                               ]
+                                "Enemies/Zombie/ZombieAnimations/rightRun/run2.png",
+                                "Enemies/Zombie/ZombieAnimations/rightRun/run3.png",
+                                "Enemies/Zombie/ZombieAnimations/rightRun/run4.png",
+                                "Enemies/Zombie/ZombieAnimations/rightRun/run5.png",
+                                "Enemies/Zombie/ZombieAnimations/rightRun/run6.png",
+                                "Enemies/Zombie/ZombieAnimations/rightRun/run7.png",
+                                "Enemies/Zombie/ZombieAnimations/rightRun/run8.png"
+                                ]
         self._runFrameRight = 0
         self._runFramesLeft = ["Enemies/Zombie/ZombieAnimations/leftRun/run1.png",
                                "Enemies/Zombie/ZombieAnimations/leftRun/run2.png",
@@ -184,7 +191,7 @@ class ZombieEnemy(BaseEnemy):
                                ]
         self._runFrameLeft = 0
         self.enemy_image = pygame.image.load(self._runFramesLeft[0])
-        self._hitbox = pygame.Rect((0, 0), (80, 130))
+        self._hitbox = pygame.Rect((30, 0), (70, 80))
         self._x, self._y = 0, 0
         self.speed = 1.5
         self._health = 10
@@ -228,7 +235,7 @@ class ZombieEnemy(BaseEnemy):
                 self._runFrameLeft = 0
             self.enemy_image = pygame.image.load(self._runFramesLeft[int(self._runFrameLeft)]).convert_alpha()
         self._screen.blit(self.enemy_image, (self._x - cameraX, self._y - cameraY))
-        self._hitbox.topleft = (self._x, self._y)
+        self._hitbox.topleft = (self._x + 30, self._y + 30)
         self.enemy_image = self.enemy_image = pygame.image.load(self._runFramesLeft[0])
 
     def getDrawState(self):
@@ -259,3 +266,6 @@ class ZombieEnemy(BaseEnemy):
         if random.randint(1, 2) == 2:
             goods = drops.HealthRegeneration(screen, x, y)
         return goods
+
+
+pseudoRandom = drops.pseudoRandom()

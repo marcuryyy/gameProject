@@ -10,19 +10,29 @@ class Player:
         self._screen = screen
         self.player_image = pygame.image.load("playerAnimations/idle/idle1.png")
         self._idleFrames = ["playerAnimations/idle/idle1.png", "playerAnimations/idle/idle2.png",
-                        "playerAnimations/idle/idle3.png", "playerAnimations/idle/idle4.png",
-                        "playerAnimations/idle/idle5.png"]
+                            "playerAnimations/idle/idle3.png", "playerAnimations/idle/idle4.png",
+                            "playerAnimations/idle/idle5.png", "playerAnimations/idle/idle6.png",
+                            "playerAnimations/idle/idle7.png",
+                            "playerAnimations/idle/idle8.png",
+                            "playerAnimations/idle/idle9.png", "playerAnimations/idle/idle10.png"
+                            ]
         self._idleFrame = 0
         self._runFramesRight = ["playerAnimations/rightRun/run1.png", "playerAnimations/rightRun/run2.png",
-                        "playerAnimations/rightRun/run3.png", "playerAnimations/rightRun/run4.png",
-                        "playerAnimations/rightRun/run5.png"]
+                                "playerAnimations/rightRun/run3.png", "playerAnimations/rightRun/run4.png",
+                                "playerAnimations/rightRun/run5.png", "playerAnimations/rightRun/run6.png",
+                                "playerAnimations/rightRun/run7.png", "playerAnimations/rightRun/run8.png",
+                                "playerAnimations/rightRun/run9.png", "playerAnimations/rightRun/run10.png"
+                                ]
         self._runFrameRight = 0
         self._runFramesLeft = ["playerAnimations/leftRun/run1.png", "playerAnimations/leftRun/run2.png",
-                                "playerAnimations/leftRun/run3.png", "playerAnimations/leftRun/run4.png",
-                                "playerAnimations/leftRun/run5.png"]
+                               "playerAnimations/leftRun/run3.png", "playerAnimations/leftRun/run4.png",
+                               "playerAnimations/leftRun/run5.png", "playerAnimations/leftRun/run6.png",
+                               "playerAnimations/leftRun/run7.png", "playerAnimations/leftRun/run8.png",
+                               "playerAnimations/leftRun/run9.png", "playerAnimations/leftRun/run10.png",
+                               ]
         self._runFrameLeft = 0
-        self._hitbox = self.player_image.get_rect()
-        self._x, self._y = self._hitbox.centerx + 1000, self._hitbox.centery + 1000
+        self._hitbox = pygame.Rect((0, 0), (90, 90))
+        self._x, self._y = self._hitbox.topleft[0] + 1000, self._hitbox.topleft[1] + 1000
         self._speed = None
         self._isAttacking = False
         self._isDashing = False
@@ -36,25 +46,25 @@ class Player:
         self._dashLength = 100
 
     def update(self, cameraX, cameraY):
-        if not(self._isRunningLeft or self._isRunningRight):
+        if not (self._isRunningLeft or self._isRunningRight):
             self._idleFrame += 0.05
-            if self._idleFrame >= 4:
+            if self._idleFrame >= len(self._idleFrames) - 1:
                 self._idleFrame = 0
             self.player_image = pygame.image.load(self._idleFrames[int(self._idleFrame)]).convert_alpha()
         else:
             if self._isRunningRight:
                 self._runFrameRight += 0.05
-                if self._runFrameRight >= 4:
+                if self._runFrameRight >= len(self._runFramesRight) - 1:
                     self._runFrameRight = 0
                 self.player_image = pygame.image.load(self._runFramesRight[int(self._runFrameRight)]).convert_alpha()
             else:
                 self._runFrameLeft += 0.05
-                if self._runFrameLeft >= 4:
+                if self._runFrameLeft >= len(self._runFramesLeft) - 1:
                     self._runFrameLeft = 0
                 self.player_image = pygame.image.load(self._runFramesLeft[int(self._runFrameLeft)]).convert_alpha()
-
-        self._screen.blit(self.player_image, (self._x - cameraX, self._y - cameraY))
-        self._hitbox.topleft = (self._x - cameraX, self._y - cameraY)
+        offset_x = self._hitbox.centerx - self.player_image.get_width() // 2
+        offset_y = self._hitbox.centery - self.player_image.get_height() // 2
+        self._screen.blit(self.player_image, (offset_x - cameraX, offset_y - cameraY))
         if self._stamina < 100:
             self._stamina += 0.1
             self._isDashing = False
@@ -103,6 +113,7 @@ class Player:
                     self._y += self._speed * self._dashLength
             self.setRunningStateRight(True)
         self._hitbox.topleft = (self._x, self._y)
+
 
     def getCoordinates(self):
         return self._x, self._y
