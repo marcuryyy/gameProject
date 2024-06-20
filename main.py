@@ -1,3 +1,5 @@
+import time
+
 import pygame
 from abc import abstractmethod, ABC
 import Enemy
@@ -10,6 +12,19 @@ import random
 
 pygame.init()
 pygame.font.init()
+pygame.mixer.init()
+clock = pygame.time.Clock()
+
+
+class Settings:
+    def __init__(self):
+        self._musicVolume: float = 0.1
+
+    def getVolume(self) -> float:
+        return self._musicVolume
+
+    def setVolume(self, newVolume: float):
+        self._musicVolume = newVolume
 
 
 class MainMenu:
@@ -24,10 +39,8 @@ class MainMenu:
         self._runMenu: bool = True
 
     def runMenu(self):
-        self._playbutton.draw()
-        self._skillsButton.draw()
-        self._SettingsButton.draw()
-        self._QuitButton.draw()
+        self._screen.fill("black")
+        self.drawButtons()
         while self._runMenu:
             pygame.display.update()
             for event in pygame.event.get():
@@ -45,14 +58,115 @@ class MainMenu:
 
     def setState(self, state: bool):
         self._runMenu = state
+        if state:
+            self.runMenu()
+
+    def drawButtons(self):
+        self._playbutton.draw()
+        self._skillsButton.draw()
+        self._SettingsButton.draw()
+        self._QuitButton.draw()
+
+
+class LoadingScreen:
+    def __init__(self):
+        self._screen: pygame.Surface = pygame.display.set_mode((750, 750))
+        self._runLoadingScreen: bool = False
+        self._loadingLabel = LoadingLabel(self._screen)
+        self._loadingSquare: pygame.Rect = pygame.Rect(275, 275, 200, 200)
+        self._loadingSquareSurface: pygame.Surface = pygame.Surface(
+            (self._loadingSquare.width, self._loadingSquare.height))
+        self._finalMap: list[list[int]] = []
+
+    def runLoadingScreen(self):
+        self._screen.fill("black")
+        self._loadingLabel.draw()
+        pygame.draw.rect(self._screen, "white", self._loadingSquare, 2)
+        pygame.display.update()
+        self._mapCreator = gameMap.GameMapCreator()
+        mapStory: gameMap.Queue = self._mapCreator.getMapQueue()
+        while self._runLoadingScreen:
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+            self.updateMap(mapStory)
+
+    def updateMap(self, mapStory):
+        if mapStory.size():
+            lastMapState = mapStory.dequeue()
+            self._loadingSquareSurface.fill((0, 0, 0))
+            for y, row in enumerate(lastMapState):
+                for x, cell in enumerate(row):
+                    if cell:
+                        pygame.draw.rect(self._loadingSquareSurface, "red", (x * 10, y * 10, 10, 10))
+            self._screen.blit(self._loadingSquareSurface, self._loadingSquare.topleft)
+            pygame.draw.rect(self._screen, "white", self._loadingSquare, 2)
+            pygame.display.flip()
+            self._finalMap = lastMapState
+            time.sleep(0.5)
+        else:
+            time.sleep(2)
+            loadingScreen.setState(False)
+            gameScene.setState(True)
+
+    def setState(self, state: bool):
+        self._runLoadingScreen = state
+        if state:
+            self.runLoadingScreen()
+
+    def getMapUtils(self):
+        return self._mapCreator, self._finalMap
+
+
+class SettingsScreen:
+    def __init__(self):
+        self._screen: pygame.Surface = pygame.display.set_mode((750, 750))
+        self._runLoadingScreen: bool = False
+        self._settingsLabel = SettingsLabel(self._screen)
+        self._musicLabelText = MusicLabelText(self._screen)
+        self._musicVolumeLevel = MusicVolumeLevel(self._screen)
+        self._runSettingsScreen: bool = False
+        self._backButton = SettingsBackButton(self._screen, 250, 50)
+        self._decreaseMusicVolume = DecreaseMusicVolume(self._screen, 50, 50)
+        self._increaseMusicVolume = IncreaseMusicVolume(self._screen, 50, 50)
+        self._buttons: list[Button] = [self._backButton, self._decreaseMusicVolume, self._increaseMusicVolume]
+
+    def runSettings(self):
+        self._screen.fill("black")
+        self.drawButtonsAndNonUpdateText()
+        while self._runSettingsScreen:
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    for button in self._buttons:
+                        button.do_on_click(event)
+
+    def setState(self, state: bool):
+        self._runSettingsScreen = state
+        if state:
+            self.runSettings()
+
+    def drawButtonsAndNonUpdateText(self):
+        self._settingsLabel.draw()
+        self._musicLabelText.draw()
+        self._backButton.draw()
+        self._decreaseMusicVolume.draw()
+        self._increaseMusicVolume.draw()
+
+    def drawUpdateText(self):
+        self._musicVolumeLevel.draw()
 
 
 class GameScene:
     def __init__(self):
-        self._mapCreator = None
         self._map = None
+        self._mapCreator = None
         self._screen = mainmenu.getScreen()
         self._running: bool = False
+
         self._screen_rect = pygame.display.get_surface().get_rect()
         self._camera_rect = pygame.Rect(0, 0, self._screen_rect.width, self._screen_rect.height)
         self._player: player.Player = player.Player(self._screen)
@@ -70,14 +184,15 @@ class GameScene:
         self._droppedGoods: list[drops] = []
         self._pets: list[diffProjectiles.BabyGhost] = []
         self._petDict: dict = {"GhostPet": 0}
-        self._clock = pygame.time.Clock()
+
         self._paused: bool = False
         self._lastShotTicks: int = 0
 
     def run_game(self):
-        self._mapCreator = gameMap.GameMapCreator()
-        self._map = self._mapCreator.getMap()
-        self._clock.tick(60)
+        self._mapCreator, self._map = loadingScreen.getMapUtils()
+        pygame.mixer.music.load("music/kevin-macleod-8bit-dungeon-boss.mp3")
+        pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(settings.getVolume())
         while self._running and not self._paused:
             pygame.display.update()
             for event in pygame.event.get():
@@ -94,8 +209,8 @@ class GameScene:
             self.processEnemies()
             self.processProjectiles()
             self.processDrops()
-            self.processPlayerBars()
             self.processPets()
+            self.processPlayerBars()
             pygame.display.flip()
 
     def setState(self, state: bool):
@@ -265,7 +380,7 @@ class PlayButton(Button):
         if self._button.collidepoint(event.pos):
             if mainmenu.getState():
                 mainmenu.setState(False)
-                gameScene.setState(True)
+                loadingScreen.setState(True)
 
 
 class SkillsButton(Button):
@@ -313,7 +428,7 @@ class SettingsButton(Button):
         if self._button.collidepoint(event.pos):
             if mainmenu.getState():
                 mainmenu.setState(False)
-                gameScene.setState(True)
+                settingsScreen.setState(True)
 
 
 class QuitButton(Button):
@@ -339,6 +454,145 @@ class QuitButton(Button):
                 pygame.quit()
 
 
+class SettingsBackButton(Button):
+
+    def __init__(self, screen: pygame.Surface, width: int, height: int):
+        super().__init__()
+        self._screen = screen
+        self._width: int = width
+        self._height: int = height
+        self._button = pygame.Rect(
+            (screen.get_size()[0] // 2 - width // 2, screen.get_size()[1] // 2 - height // 2 + height * 5.5),
+            (self._width, self._height))
+        self._text: pygame.Surface = self._font.render("Выйти", True, "black")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
+
+    def draw(self):
+        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
+        self._screen.blit(self._text, self._text_rectangle)
+        pygame.display.update()
+
+    def do_on_click(self, event: pygame.event.Event):
+        if self._button.collidepoint(event.pos):
+            mainmenu.setState(True)
+            settingsScreen.setState(False)
+
+
+class DecreaseMusicVolume(Button):
+    def __init__(self, screen: pygame.Surface, width: int, height: int):
+        super().__init__()
+        self._screen = screen
+        self._width: int = width
+        self._height: int = height
+        self._button = pygame.Rect(
+            (screen.get_size()[0] // 2 - width * -3, screen.get_size()[1] // 2 - height // 2 + height * -4),
+            (self._width, self._height))
+        self._text: pygame.Surface = self._font.render("-", True, "black")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
+        self._fill_rect = pygame.Rect(0, 0, 80, 75)
+        self._fill_rect.center = (self._screen.get_size()[0] - 135, 175)
+
+    def draw(self):
+        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
+        self._screen.blit(self._text, self._text_rectangle)
+        pygame.display.update()
+
+    def do_on_click(self, event: pygame.event.Event):
+        if self._button.collidepoint(event.pos):
+            if settings.getVolume() > 0:
+                settings.setVolume(settings.getVolume() - 0.05)
+                self._screen.fill("black", self._fill_rect)
+                settingsScreen.drawUpdateText()
+
+
+class IncreaseMusicVolume(Button):
+    def __init__(self, screen: pygame.Surface, width: int, height: int):
+        super().__init__()
+        self._screen = screen
+        self._width: int = width
+        self._height: int = height
+        self._button = pygame.Rect(
+            (screen.get_size()[0] // 2 - width * -5.5, screen.get_size()[1] // 2 - height // 2 + height * -4),
+            (self._width, self._height))
+        self._text: pygame.Surface = self._font.render("+", True, "black")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
+        self._fill_rect = pygame.Rect(0, 0, 80, 75)
+        self._fill_rect.center = (self._screen.get_size()[0] - 135, 175)
+
+    def draw(self):
+        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
+        self._screen.blit(self._text, self._text_rectangle)
+        pygame.display.update()
+
+    def do_on_click(self, event: pygame.event.Event):
+        if self._button.collidepoint(event.pos):
+            if settings.getVolume() < 1:
+                settings.setVolume(settings.getVolume() + 0.05)
+                self._screen.fill("black", self._fill_rect)
+                settingsScreen.drawUpdateText()
+
+
+class TextLabel(ABC):
+    def __init__(self):
+        self._font: pygame.font.Font = pygame.font.SysFont(None, 50)
+
+    @abstractmethod
+    def draw(self):
+        pass
+
+
+class LoadingLabel(TextLabel):
+    def __init__(self, screen: pygame.Surface):
+        super().__init__()
+        self._screen = screen
+        self._text: pygame.Surface = self._font.render("Загрузка...", True, "white")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=(self._screen.get_size()[0] // 2, 50))
+
+    def draw(self):
+        self._screen.blit(self._text, self._text_rectangle)
+
+
+class SettingsLabel(TextLabel):
+    def __init__(self, screen: pygame.Surface):
+        super().__init__()
+        self._screen = screen
+        self._text: pygame.Surface = self._font.render("Настройки", True, "white")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=(self._screen.get_size()[0] // 2, 50))
+
+    def draw(self):
+        self._screen.blit(self._text, self._text_rectangle)
+
+
+class MusicLabelText(TextLabel):
+    def __init__(self, screen: pygame.Surface):
+        super().__init__()
+        self._screen = screen
+        self._text: pygame.Surface = self._font.render("Уровень громкости, %", True, "white")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=(self._screen.get_size()[0] // 3, 175))
+
+    def draw(self):
+        self._screen.blit(self._text, self._text_rectangle)
+
+
+class MusicVolumeLevel(TextLabel):
+    def __init__(self, screen: pygame.Surface):
+        super().__init__()
+        self._text_rectangle = None
+        self._text = None
+        self._screen = screen
+
+    def draw(self):
+        self._text: pygame.Surface = self._font.render(f"{round(settings.getVolume() * 100, 1)}", True, "white")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=(self._screen.get_size()[0] - 140, 175))
+        self._screen.blit(self._text, self._text_rectangle)
+
+    def getRect(self) -> pygame.Rect:
+        return self._text_rectangle
+
+
+settings = Settings()
 mainmenu = MainMenu()
 gameScene = GameScene()
+loadingScreen = LoadingScreen()
+settingsScreen = SettingsScreen()
 mainmenu.runMenu()
