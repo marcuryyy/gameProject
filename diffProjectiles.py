@@ -6,8 +6,7 @@ import Enemy
 
 class FireProjectile:
     def __init__(self, x: int, y: int, target: Enemy.BaseEnemy, ticks: int, cameraX: int, cameraY: int):
-        self.image: pygame.Surface = pygame.Surface((10, 10))
-        self.image.fill("yellow")
+        self.image: pygame.Surface = pygame.image.load("projectiles/fire.png")
         self._rect: pygame.Rect = self.image.get_rect()
         self._rect.x, self._rect.y = x, y
         self._cameraX, self._cameraY = cameraX, cameraY
@@ -58,7 +57,35 @@ class FireProjectile:
 class BabyGhost:
     def __init__(self, screen: pygame.Surface, x: int, y: int):
         self._screen: pygame.Surface = screen
-        self.image: pygame.Surface = pygame.image.load("pets/babyghost.png")
+        self._runFramesRight: list[str] = ["pets/babyGhost/rightRun/run1.png",
+                                           "pets/babyGhost/rightRun/run2.png",
+                                           "pets/babyGhost/rightRun/run3.png",
+                                           "pets/babyGhost/rightRun/run4.png",
+                                           "pets/babyGhost/rightRun/run5.png",
+                                           "pets/babyGhost/rightRun/run6.png",
+                                           "pets/babyGhost/rightRun/run7.png",
+                                           "pets/babyGhost/rightRun/run8.png",
+                                           "pets/babyGhost/rightRun/run9.png",
+                                           "pets/babyGhost/rightRun/run10.png",
+                                           "pets/babyGhost/rightRun/run11.png",
+                                           "pets/babyGhost/rightRun/run12.png",
+                                           ]
+        self._runFrameRight: int = 0
+        self._runFramesLeft: list[str] = ["pets/babyGhost/leftRun/run1.png",
+                                          "pets/babyGhost/leftRun/run2.png",
+                                          "pets/babyGhost/leftRun/run3.png",
+                                          "pets/babyGhost/leftRun/run4.png",
+                                          "pets/babyGhost/leftRun/run5.png",
+                                          "pets/babyGhost/leftRun/run6.png",
+                                          "pets/babyGhost/leftRun/run7.png",
+                                          "pets/babyGhost/leftRun/run8.png",
+                                          "pets/babyGhost/leftRun/run9.png",
+                                          "pets/babyGhost/leftRun/run10.png",
+                                          "pets/babyGhost/leftRun/run11.png",
+                                          "pets/babyGhost/leftRun/run12.png",
+                                          ]
+        self._runFrameLeft: int = 0
+        self.image: pygame.Surface = pygame.image.load(self._runFramesRight[0])
         self._hitbox: pygame.Rect = self.image.get_rect()
         self._offset: int = 50
         self._hitbox.x, self._hitbox.y = x - self._offset, y - self._offset * 1.5
@@ -86,6 +113,16 @@ class BabyGhost:
             dx, dy = enemy_x - self._hitbox.x, enemy_y - self._hitbox.y
             vector_length = math.hypot(dx, dy)
             dx, dy = dx / vector_length, dy / vector_length
+            if enemy_x > self._hitbox.x:
+                self._runFrameRight += 0.05
+                if self._runFrameRight >= 12:
+                    self._runFrameRight = 0
+                self.image = pygame.image.load(self._runFramesRight[int(self._runFrameRight)])
+            if enemy_x <= self._hitbox.x:
+                self._runFrameLeft += 0.05
+                if self._runFrameLeft >= 12:
+                    self._runFrameLeft = 0
+                self.image = pygame.image.load(self._runFramesLeft[int(self._runFrameLeft)])
             self._hitbox.x += dx * self._speed
             self._hitbox.y += dy * self._speed
         else:

@@ -2,7 +2,7 @@ import copy
 
 import pygame
 import random
-import threading
+
 
 class Queue:
     def __init__(self, lst):
@@ -126,7 +126,7 @@ class generateMap(Settings):
     def runGenerate(self):
         running = True
         while running:
-            if pygame.time.get_ticks() - self.ticks > 10000:
+            if pygame.time.get_ticks() - self.ticks > 1000:
                 rows = len(self.map)
                 cols = len(self.map[0])
                 final_map = [[2 for _ in range(cols + 2)] for _ in range(rows + 2)]
@@ -138,8 +138,7 @@ class generateMap(Settings):
                 if event.type == pygame.QUIT:
                     running = False
             self.ant_x, self.ant_y, self.ant_direction, self.white_ratio = self.update_ant(
-                self.ant_x, self.ant_y, self.ant_direction, self.grid, self.white_ratio, self.target_ratio
-            )
+                self.ant_x, self.ant_y, self.ant_direction, self.grid, self.white_ratio, self.target_ratio)
 
             for y in range(self.height // 10):
                 for x in range(self.width // 10):
@@ -154,6 +153,3 @@ class generateMap(Settings):
 
     def getQueue(self):
         return self._queue
-
-
-

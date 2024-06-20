@@ -4,7 +4,8 @@ import random
 import drops
 import player
 import math
-import numpy
+
+import pseudoRandomFunc
 
 pygame.init()
 
@@ -268,4 +269,4 @@ class ZombieEnemy(BaseEnemy):
         return goods
 
 
-pseudoRandom = drops.pseudoRandom()
+pseudoRandom = pseudoRandomFunc.pseudoRandom()
