@@ -1,5 +1,4 @@
 import time
-
 import pygame
 from abc import abstractmethod, ABC
 import Enemy
@@ -9,6 +8,8 @@ import player
 import diffProjectiles
 import math
 import random
+
+from EC.Component import components
 
 pygame.init()
 pygame.font.init()
@@ -169,7 +170,8 @@ class GameScene:
 
         self._screen_rect = pygame.display.get_surface().get_rect()
         self._camera_rect = pygame.Rect(0, 0, self._screen_rect.width, self._screen_rect.height)
-        self._player: player.Player = player.Player(self._screen)
+        self._player: player.Player = player.Player(self._screen, components.Health(500, 500),
+                                                    components.Stamina(100), components.Speed(2))
         self._playerX: int = self._player.getCoordinates()[0]
         self._playerY: int = self._player.getCoordinates()[1]
         self._closestEnemy: Enemy.BaseEnemy | None = None
