@@ -69,6 +69,53 @@ class MainMenu:
         self._QuitButton.draw()
 
 
+class SkillsScreen:
+
+    def __init__(self):
+        self._screen: pygame.Surface = pygame.display.set_mode((750, 750))
+        self._runLoadingScreen: bool = False
+        self._settingsLabel = SkillsLabel(self._screen)
+        self._runSkillsScreen: bool = False
+        self._speedIcon = pygame.image.load("skillsIcons/speed.png")
+        self._buyButton = BuyButton(self._screen, 200, 50, "speed")
+        self._whiteBackground = pygame.Surface((96, 96))
+        self._whiteBackground.fill("white")
+        self._speedIconRect = self._speedIcon.get_rect(
+            center=(self._screen.get_width() // 2, self._screen.get_height() // 2))
+        self._whiteRect = self._whiteBackground.get_rect(
+            center=(self._screen.get_width() // 2, self._screen.get_height() // 2))
+        self._backButton = BackButton(self._screen, 250, 50)
+        self._buttons: list[Button] = [self._backButton, self._buyButton]
+
+    def runSettings(self):
+        self._screen.fill("black")
+        self.drawButtonsAndNonUpdateText()
+        self._screen.blit(self._whiteBackground, self._whiteRect)
+        self._screen.blit(self._speedIcon, self._speedIconRect)
+
+        while self._runSkillsScreen:
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    for button in self._buttons:
+                        button.do_on_click(event)
+
+    def setState(self, state: bool):
+        self._runSkillsScreen = state
+        if state:
+            self.runSettings()
+
+    def drawButtonsAndNonUpdateText(self):
+        self._settingsLabel.draw()
+        self._backButton.draw()
+        self._buyButton.draw()
+
+    def drawUpdateText(self):
+        pass
+
+
 class LoadingScreen:
     def __init__(self):
         self._screen: pygame.Surface = pygame.display.set_mode((750, 750))
@@ -128,7 +175,7 @@ class SettingsScreen:
         self._musicLabelText = MusicLabelText(self._screen)
         self._musicVolumeLevel = MusicVolumeLevel(self._screen)
         self._runSettingsScreen: bool = False
-        self._backButton = SettingsBackButton(self._screen, 250, 50)
+        self._backButton = BackButton(self._screen, 250, 50)
         self._decreaseMusicVolume = DecreaseMusicVolume(self._screen, 50, 50)
         self._increaseMusicVolume = IncreaseMusicVolume(self._screen, 50, 50)
         self._buttons: list[Button] = [self._backButton, self._decreaseMusicVolume, self._increaseMusicVolume]
@@ -159,6 +206,48 @@ class SettingsScreen:
 
     def drawUpdateText(self):
         self._musicVolumeLevel.draw()
+
+
+class PauseMenu:
+    def __init__(self):
+        self._screen: pygame.Surface = mainmenu.getScreen()
+        self._ResumeButton = ResumeButton(self._screen, 250, 50)
+        self._MenuButton = BackToMenuButton(self._screen, 250, 50)
+        self._buttons: list[Button] = [self._ResumeButton, self._MenuButton]
+        self._runMenu: bool = False
+
+    def runMenu(self):
+        self.drawButtons()
+        transparent_rect = pygame.Surface((750, 750), pygame.SRCALPHA)
+        transparent_rect.fill((255, 255, 255, 128))
+        self._screen.blit(transparent_rect, (0, 0))
+        while self._runMenu:
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    for button in self._buttons:
+                        button.do_on_click(event)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self._runMenu = False
+                        gameScene.setPauseState(False)
+
+    def getScreen(self) -> pygame.Surface:
+        return self._screen
+
+    def getState(self) -> bool:
+        return self._runMenu
+
+    def setState(self, state: bool):
+        self._runMenu = state
+        if state:
+            self.runMenu()
+
+    def drawButtons(self):
+        self._ResumeButton.draw()
+        self._MenuButton.draw()
 
 
 class GameScene:
@@ -195,6 +284,7 @@ class GameScene:
         pygame.mixer.music.load("music/kevin-macleod-8bit-dungeon-boss.mp3")
         pygame.mixer.music.play(-1)
         pygame.mixer.music.set_volume(settings.getVolume())
+        print(self._running, self._paused)
         while self._running and not self._paused:
             pygame.display.update()
             for event in pygame.event.get():
@@ -203,7 +293,10 @@ class GameScene:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self._paused = True
-                        self.pause()
+                        pygame.mixer.music.stop()
+                        pauseMenu.setState(True)
+                        pauseMenu.runMenu()
+
             self._maxEnemyCount = self.setDifficulty(self._player.getHP(), self._player.getMaxHP(),
                                                      pygame.time.get_ticks())
             self._mapCreator.fillMap(self._screen, self._camera_rect.x, self._camera_rect.y)
@@ -219,16 +312,6 @@ class GameScene:
         self._running = state
         if state:
             gameScene.run_game()
-
-    def pause(self):
-        self._paused = True
-        while self._paused:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self._paused = False
 
     def setDifficulty(self, player_health: int, player_max_health: int, ticks: int) -> int:
         difficulty: list = ["Very Easy", "Easy", "Medium", "Hard", "Very Hard", "Nearly Impossible", "Impossible"]
@@ -348,6 +431,12 @@ class GameScene:
         for pet in self._pets:
             pet.followPlayer(self._playerX, self._playerY, self._camera_rect.x, self._camera_rect.y, self._enemies)
 
+    def setPauseState(self, state: bool):
+        self._paused = state
+
+    def getPlayer(self):
+        return self._player
+
 
 class Button(ABC):
     def __init__(self):
@@ -406,7 +495,7 @@ class SkillsButton(Button):
         if self._button.collidepoint(event.pos):
             if mainmenu.getState():
                 mainmenu.setState(False)
-                gameScene.setState(True)
+                skillsMenu.setState(True)
 
 
 class SettingsButton(Button):
@@ -456,7 +545,7 @@ class QuitButton(Button):
                 pygame.quit()
 
 
-class SettingsBackButton(Button):
+class BackButton(Button):
 
     def __init__(self, screen: pygame.Surface, width: int, height: int):
         super().__init__()
@@ -534,6 +623,79 @@ class IncreaseMusicVolume(Button):
                 settingsScreen.drawUpdateText()
 
 
+class ResumeButton(Button):
+    def __init__(self, screen: pygame.Surface, width: int, height: int):
+        super().__init__()
+        self._screen = screen
+        self._width: int = width
+        self._height: int = height
+        self._button = pygame.Rect(
+            (screen.get_size()[0] // 2 - width // 2, screen.get_size()[1] // 2 - height // 2 + height * 3),
+            (self._width, self._height))
+        self._text: pygame.Surface = self._font.render("Вернуться", True, "black")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
+
+    def draw(self):
+        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
+        self._screen.blit(self._text, self._text_rectangle)
+        pygame.display.update()
+
+    def do_on_click(self, event: pygame.event.Event):
+        if self._button.collidepoint(event.pos):
+            gameScene.setPauseState(False)
+            pauseMenu.setState(False)
+
+
+class BackToMenuButton(Button):
+    def __init__(self, screen: pygame.Surface, width: int, height: int):
+        super().__init__()
+        self._screen = screen
+        self._width: int = width
+        self._height: int = height
+        self._button = pygame.Rect(
+            (screen.get_size()[0] // 2 - width // 2, screen.get_size()[1] // 2 - height // 2 + height * 4.5),
+            (self._width, self._height))
+        self._text: pygame.Surface = self._font.render("Выйти", True, "black")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
+
+    def draw(self):
+        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
+        self._screen.blit(self._text, self._text_rectangle)
+        pygame.display.update()
+
+    def do_on_click(self, event: pygame.event.Event):
+        if self._button.collidepoint(event.pos):
+            gameScene.setPauseState(False)
+            mainmenu.setState(True)
+            gameScene.setState(False)
+            pauseMenu.setState(False)
+
+
+class BuyButton(Button):
+    def __init__(self, screen: pygame.Surface, width: int, height: int, product: str):
+        super().__init__()
+        self._screen = screen
+        self._width: int = width
+        self._height: int = height
+        self._product: str = product
+        self._button = pygame.Rect(
+            (screen.get_size()[0] // 2 - width // 2, screen.get_size()[1] // 2 - height // 2 + height * 2),
+            (self._width, self._height))
+        self._text: pygame.Surface = self._font.render("Купить", True, "black")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
+
+    def draw(self):
+        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
+        self._screen.blit(self._text, self._text_rectangle)
+        pygame.display.update()
+
+    def do_on_click(self, event: pygame.event.Event):
+        if self._button.collidepoint(event.pos):
+            gameScene.getPlayer().getSpeed().setMaxSpeed(6)
+            pygame.mixer_music.load("music/buySound.mp3")
+            pygame.mixer_music.play()
+
+
 class TextLabel(ABC):
     def __init__(self):
         self._font: pygame.font.Font = pygame.font.SysFont(None, 50)
@@ -559,6 +721,17 @@ class SettingsLabel(TextLabel):
         super().__init__()
         self._screen = screen
         self._text: pygame.Surface = self._font.render("Настройки", True, "white")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=(self._screen.get_size()[0] // 2, 50))
+
+    def draw(self):
+        self._screen.blit(self._text, self._text_rectangle)
+
+
+class SkillsLabel(TextLabel):
+    def __init__(self, screen: pygame.Surface):
+        super().__init__()
+        self._screen = screen
+        self._text: pygame.Surface = self._font.render("Навыки", True, "white")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=(self._screen.get_size()[0] // 2, 50))
 
     def draw(self):
@@ -594,7 +767,9 @@ class MusicVolumeLevel(TextLabel):
 
 settings = Settings()
 mainmenu = MainMenu()
+skillsMenu = SkillsScreen()
 gameScene = GameScene()
+pauseMenu = PauseMenu()
 loadingScreen = LoadingScreen()
 settingsScreen = SettingsScreen()
 mainmenu.runMenu()

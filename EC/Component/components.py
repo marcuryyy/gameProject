@@ -22,12 +22,19 @@ class Health:
 class Speed:
     def __init__(self, speed: int):
         self._speed = speed
+        self._maxSpeed = speed
 
     def getSpeed(self) -> int:
         return self._speed
 
     def setSpeed(self, newSpeed: int | float):
         self._speed = newSpeed
+
+    def getMaxSpeed(self):
+        return self._maxSpeed
+
+    def setMaxSpeed(self, newSpeed: int):
+        self._maxSpeed = newSpeed
 
 
 class Position:
@@ -61,10 +68,8 @@ class Stamina:
     def setStamina(self, newStamina: int | float):
         self._stamina = newStamina
 
-
     def decreaseStamina(self, amount: int | float):
         self._stamina -= amount
 
     def increaseStamina(self, amount: int | float):
         self._stamina += amount
-

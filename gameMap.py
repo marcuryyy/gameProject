@@ -38,7 +38,7 @@ class GameMapCreator:
         self._swampWidth, self._swampHeight = self._swamp.get_width(), self._swamp.get_height()
         self._grass_tiles: list[pygame.Surface] = [random.choice(self._grass) for _ in
                                                    range(len(self._map) * len(self._map[0]))]
-        self._tile_width, self._tile_height = 400, 400
+        self._tile_width, self._tile_height = self._swampWidth, self._swampHeight
         self._tile_amount_x, self._tile_amount_y = len(self._map[0]), len(self._map)
 
     def fillMap(self, screen: pygame.Surface, cameraX: int, cameraY: int):

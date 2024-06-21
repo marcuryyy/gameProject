@@ -1,7 +1,8 @@
 import pygame
 import gameMap
 from abc import ABC, abstractmethod
-
+import os
+from math import ceil
 from EC.Component import components
 
 pygame.init()
@@ -12,31 +13,15 @@ class Player:
                  stamina: components.Stamina, speed: components.Speed):
         self._screen = screen
         self.player_image: pygame.Surface = pygame.image.load("playerAnimations/idle/idle1.png")
-        self._idleFrames: list[str] = ["playerAnimations/idle/idle1.png", "playerAnimations/idle/idle2.png",
-                                       "playerAnimations/idle/idle3.png", "playerAnimations/idle/idle4.png",
-                                       "playerAnimations/idle/idle5.png", "playerAnimations/idle/idle6.png",
-                                       "playerAnimations/idle/idle7.png",
-                                       "playerAnimations/idle/idle8.png",
-                                       "playerAnimations/idle/idle9.png", "playerAnimations/idle/idle10.png"
-                                       ]
+        self._idleFrames: list[str] = os.listdir("playerAnimations/idle")
         self._idleFrame: int = 0
-        self._runFramesRight: list[str] = ["playerAnimations/rightRun/run1.png", "playerAnimations/rightRun/run2.png",
-                                           "playerAnimations/rightRun/run3.png", "playerAnimations/rightRun/run4.png",
-                                           "playerAnimations/rightRun/run5.png", "playerAnimations/rightRun/run6.png",
-                                           "playerAnimations/rightRun/run7.png", "playerAnimations/rightRun/run8.png",
-                                           "playerAnimations/rightRun/run9.png", "playerAnimations/rightRun/run10.png"
-                                           ]
+        self._runFramesRight: list[str] = os.listdir("playerAnimations/rightRun")
         self._runFrameRight: int = 0
-        self._runFramesLeft: list[str] = ["playerAnimations/leftRun/run1.png", "playerAnimations/leftRun/run2.png",
-                                          "playerAnimations/leftRun/run3.png", "playerAnimations/leftRun/run4.png",
-                                          "playerAnimations/leftRun/run5.png", "playerAnimations/leftRun/run6.png",
-                                          "playerAnimations/leftRun/run7.png", "playerAnimations/leftRun/run8.png",
-                                          "playerAnimations/leftRun/run9.png", "playerAnimations/leftRun/run10.png",
-                                          ]
+        self._runFramesLeft: list[str] = os.listdir("playerAnimations/leftRun")
         self._runFrameLeft: int = 0
         self._hitbox: pygame.Rect = pygame.Rect((0, 0), (90, 90))
-        self._x: int = self._hitbox.topleft[0] + 1000
-        self._y: int = self._hitbox.topleft[1] + 1000
+        self._x: int = self._hitbox.midbottom[0] + 1000
+        self._y: int = self._hitbox.midbottom[1] + 1000
         self._speed: components.Speed = speed
         self._hp: components.Health = health
         self._stamina: components.Stamina = stamina
@@ -53,18 +38,18 @@ class Player:
             self._idleFrame += 0.05
             if self._idleFrame >= len(self._idleFrames) - 1:
                 self._idleFrame = 0
-            self.player_image = pygame.image.load(self._idleFrames[int(self._idleFrame)]).convert_alpha()
+            self.player_image = pygame.image.load(f"playerAnimations/idle/{self._idleFrames[int(self._idleFrame)]}").convert_alpha()
         else:
             if self._isRunningRight:
                 self._runFrameRight += 0.05
                 if self._runFrameRight >= len(self._runFramesRight) - 1:
                     self._runFrameRight = 0
-                self.player_image = pygame.image.load(self._runFramesRight[int(self._runFrameRight)]).convert_alpha()
+                self.player_image = pygame.image.load(f"playerAnimations/rightRun/{self._runFramesRight[int(self._runFrameRight)]}").convert_alpha()
             else:
                 self._runFrameLeft += 0.05
                 if self._runFrameLeft >= len(self._runFramesLeft) - 1:
                     self._runFrameLeft = 0
-                self.player_image = pygame.image.load(self._runFramesLeft[int(self._runFrameLeft)]).convert_alpha()
+                self.player_image = pygame.image.load(f"playerAnimations/leftRun/{self._runFramesLeft[int(self._runFrameLeft)]}").convert_alpha()
         offset_x: int = self._hitbox.centerx - self.player_image.get_width() // 2
         offset_y: int = self._hitbox.centery - self.player_image.get_height() // 2
         self._screen.blit(self.player_image, (offset_x - cameraX, offset_y - cameraY))
@@ -77,10 +62,10 @@ class Player:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LSHIFT]:
             self._isDashing = True
-        if game_map.getMap()[int(self._y // game_map.getTileSize()[1])][int(self._x // game_map.getTileSize()[0])] == 1:
+        if game_map.getMap()[ceil((self._y + 90) // game_map.getTileSize()[1])][ceil((self._x + 90) // game_map.getTileSize()[0])] == 1:
             self._speed.setSpeed(2)
         else:
-            self._speed.setSpeed(4)
+            self._speed.setSpeed(self._speed.getMaxSpeed())
         if (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]) and (keys[pygame.K_UP] or keys[pygame.K_DOWN]):
             self._speed.setSpeed(self._speed.getSpeed() / (2 ** 0.5))
         if keys[pygame.K_LEFT]:
@@ -125,6 +110,9 @@ class Player:
 
     def getHP(self) -> int:
         return self._hp.getHP()
+
+    def getSpeed(self):
+        return self._speed
 
     def getMaxHP(self) -> int:
         return self._hp.getMAXHP()
