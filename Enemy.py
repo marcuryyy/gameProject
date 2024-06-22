@@ -29,10 +29,6 @@ class BaseEnemy(ABC):
         pass
 
     @abstractmethod
-    def checkCollisions(self, *args):
-        pass
-
-    @abstractmethod
     def Damage(self, amount: int | float):
         pass
 
@@ -141,10 +137,6 @@ class GhostEnemy(BaseEnemy):
     def setDrawState(self):
         self._isDrawn = True
 
-    def checkCollisions(self, player: player.Player, player_hitbox: pygame.Rect):
-        if self._hitbox.colliderect(player_hitbox):
-            player.getDamage(self._damage)
-
     def Damage(self, amount: int | float):
         self.enemy_image = self.enemy_image = pygame.image.load(self._runFramesLeft[0])
         self._health -= amount
@@ -251,10 +243,6 @@ class ZombieEnemy(BaseEnemy):
 
     def setDrawState(self):
         self._isDrawn = True
-
-    def checkCollisions(self, player: player.Player, player_hitbox: pygame.Rect):
-        if self._hitbox.colliderect(player_hitbox):
-            player.getDamage(self._damage)
 
     def Damage(self, amount: int | float):
         self.enemy_image = self.enemy_image = pygame.image.load(self._runFramesLeft[0])

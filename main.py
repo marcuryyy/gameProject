@@ -10,9 +10,6 @@ import player
 import diffProjectiles
 import math
 import random
-
-from EC.Component import components
-
 pygame.init()
 pygame.font.init()
 pygame.mixer.init()
@@ -166,7 +163,7 @@ class LoadingScreen:
             self.runLoadingScreen()
 
     def getMapUtils(self):
-        return self._mapCreator, self._finalMap
+        return self._mapCreator
 
 
 class SettingsScreen:
@@ -285,8 +282,8 @@ class GameScene:
 
     def run_game(self):
         clock.tick(60)
-        self._mapCreator, self._map = loadingScreen.getMapUtils()
-        self._tileMap = self._mapCreator.getMap()
+        self._mapCreator = loadingScreen.getMapUtils()
+        self._map, self._tileMap = self._mapCreator.getMap()
         pygame.mixer.music.load("music/kevin-macleod-8bit-dungeon-boss.mp3")
         pygame.mixer.music.play(-1)
         pygame.mixer.music.set_volume(settings.getVolume())
@@ -404,7 +401,6 @@ class GameScene:
                 closest_distance = current_distance
                 self._closestEnemy = enemy
             enemy.followPlayer(self._player, self._playerX, self._playerY, self._camera_rect.x, self._camera_rect.y)
-            enemy.checkCollisions(self._player, self._player.getHitbox())
             if enemy.getHP() <= 0:
                 dropped = enemy.dropGoods(self._screen, enemy_x, enemy_y, self._petDict)
                 if dropped:

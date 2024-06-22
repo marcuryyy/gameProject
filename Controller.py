@@ -22,8 +22,19 @@ class Controller:
             for x, tile in enumerate(line):
                 if tile == 0 and player_rect.colliderect(self._tile_map[y][x].getHitbox()):
                     self._player.setSpeed(4)
-                elif tile == 1 and player_rect.colliderect(self._tile_map[y][x].getHitbox()):
+                    self._player.setAllStates(True)
+                if tile == 1 and player_rect.colliderect(self._tile_map[y][x].getHitbox()):
                     self._player.setSpeed(2)
+                    self._player.setAllStates(True)
+                if self._tile_map[y][x].__class__.__name__ == "WaterTile" and player_rect.colliderect(self._tile_map[y][x].getHitbox()):
+                    if self._player.getFacing().lower() == "left":
+                        self._player.setWalkLeftState(False)
+                    if self._player.getFacing().lower() == "right":
+                        self._player.setWalkRightState(False)
+                    if self._player.getFacing().lower() == "up":
+                        self._player.setWalkUpState(False)
+                    if self._player.getFacing().lower() == "down":
+                        self._player.setWalkDownState(False)
 
     def update(self, playerEntity, enemies):
         self._player = playerEntity

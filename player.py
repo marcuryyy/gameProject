@@ -20,10 +20,11 @@ class Player:
         self._x: int = self._hitbox.topleft[0] + 1000
         self._y: int = self._hitbox.topleft[1] + 1000
         self._speed: int = 4
-        self._isAttacking: bool = False
         self._isDashing: bool = False
         self._isRunningRight: bool = False
         self._isRunningLeft: bool = False
+        self._canWalkRight = self._canWalkLeft = self._canWalkUp = self._canWalkDown = True
+        self._facing: str = "None"
         self._maxHealth: int = 500
         self._hp: int = self._maxHealth
         self._stamina: int = 100
@@ -63,37 +64,41 @@ class Player:
         if (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]) and (keys[pygame.K_UP] or keys[pygame.K_DOWN]):
             self._speed = self._speed / (2 ** 0.5)
         if keys[pygame.K_LEFT]:
-            if self._x - game_map.getTileSize()[0] > 10:
+            if self._canWalkLeft:
                 self._x -= self._speed
-            if self._isDashing:
-                if self._stamina >= 100:
-                    self._stamina = 0
-                    self._x -= self._speed * self._dashLength
-            self.setRunningStateLeft(True)
+                if self._isDashing:
+                    if self._stamina >= 100:
+                        self._stamina = 0
+                        self._x -= self._speed * self._dashLength
+                self._facing = "Left"
+                self.setRunningStateLeft(True)
         elif keys[pygame.K_RIGHT]:
-            if abs(self._x - (game_map.getTileSize()[0] * (game_map.getTileAmount()[0] - 1))) > 15:
+            if self._canWalkRight:
                 self._x += self._speed
-            if self._isDashing:
-                if self._stamina >= 100:
-                    self._stamina = 0
-                    self._x += self._speed * self._dashLength
-            self.setRunningStateRight(True)
+                if self._isDashing:
+                    if self._stamina >= 100:
+                        self._stamina = 0
+                        self._x += self._speed * self._dashLength
+                self._facing = "Right"
+                self.setRunningStateRight(True)
         if keys[pygame.K_UP]:
-            if self._y - game_map.getTileSize()[1] > 20:
+            if self._canWalkUp:
                 self._y -= self._speed
-            if self._isDashing:
-                if self._stamina >= 100:
-                    self._stamina = 0
-                    self._y -= self._speed * self._dashLength
-            self.setRunningStateLeft(True)
+                if self._isDashing:
+                    if self._stamina >= 100:
+                        self._stamina = 0
+                        self._y -= self._speed * self._dashLength
+                self._facing = "Up"
+                self.setRunningStateLeft(True)
         elif keys[pygame.K_DOWN]:
-            if (game_map.getTileSize()[1] * (game_map.getTileAmount()[1] - 1)) - self._y > 1:
+            if self._canWalkDown:
                 self._y += self._speed
-            if self._isDashing:
-                if self._stamina == 100:
-                    self._stamina = 0
-                    self._y += self._speed * self._dashLength
-            self.setRunningStateRight(True)
+                if self._isDashing:
+                    if self._stamina == 100:
+                        self._stamina = 0
+                        self._y += self._speed * self._dashLength
+                self._facing = "Down"
+                self.setRunningStateRight(True)
         self._hitbox.topleft = (self._x, self._y)
 
     def getCoordinates(self) -> tuple[int, int]:
@@ -114,17 +119,32 @@ class Player:
     def getHealthBar(self):
         return self._heatlhbar
 
-    def getAttackState(self) -> bool:
-        return self._isAttacking
-
     def getStaminaBar(self):
         return self._staminabar
 
     def getSTAMINA(self) -> int:
         return self._stamina
 
+    def setWalkLeftState(self, state: bool):
+        self._canWalkLeft = state
+
+    def setWalkRightState(self, state: bool):
+        self._canWalkRight = state
+
+    def setWalkUpState(self, state: bool):
+        self._canWalkUp = state
+
+    def setWalkDownState(self, state: bool):
+        self._canWalkDown = state
+
+    def setAllStates(self, state: bool):
+        self._canWalkLeft = self._canWalkRight = self._canWalkDown = self._canWalkUp = state
+
     def getDashState(self) -> bool:
         return self._isDashing
+
+    def getFacing(self) -> str:
+        return self._facing
 
     def addHealth(self, newHealth: int):
         if self._hp + newHealth <= 500:

@@ -76,8 +76,8 @@ class GameMapCreator:
             for x, tile in enumerate(line):
                 tile.draw(screen, x, y, cameraX, cameraY)
 
-    def getMap(self) -> list[list[BaseTile]]:
-        return self._tile_map
+    def getMap(self) -> (list[list[int]],list[list[BaseTile]]):
+        return self._map, self._tile_map
 
     def getTileSize(self) -> tuple[int, int]:
         return self._tile_width, self._tile_height
