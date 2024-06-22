@@ -45,7 +45,7 @@ class FireProjectile:
         for enemy in enemies:
             temp_rect = copy.deepcopy(self._rect)
             if temp_rect.colliderect(enemy.getHitbox()) and self._damageTimesCounter < self._damageTimes:
-                self.target.getDamage(self._damage)
+                self.target.Damage(self._damage)
                 self._damageTimesCounter += 1
                 return True
 

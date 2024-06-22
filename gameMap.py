@@ -2,7 +2,7 @@ import copy
 
 import pygame
 import random
-
+import numpy
 
 class Queue:
     def __init__(self, lst):
@@ -24,38 +24,60 @@ class Queue:
         return self._length
 
 
+class BaseTile:
+    def __init__(self, image_path: str):
+        self._image: pygame.Surface = pygame.image.load(image_path)
+        self._width: int = self._image.get_width()
+        self._height: int = self._image.get_height()
+        self._hitbox: pygame.Rect = self._image.get_rect()
+
+    def draw(self, screen, x: int, y: int, camera_x: int, camera_y: int):
+        self._hitbox.topleft = (x * self._width, y * self._height)
+        screen.blit(self._image, (x * self._width - camera_x, y * self._height - camera_y))
+
+    def getWidth(self) -> int:
+        return self._width
+
+    def getHeight(self) -> int:
+        return self._height
+
+    def getHitbox(self) -> pygame.Rect:
+        return self._hitbox
+
+
+class GrassTile(BaseTile):
+    def __init__(self):
+        super().__init__("background/GrassTile.jpg")
+
+
+class WaterTile(BaseTile):
+    def __init__(self):
+        super().__init__("background/Water.png")
+
+
+class RocksTile(BaseTile):
+    def __init__(self):
+        super().__init__("background/RockTile.jpg")
+
+
 class GameMapCreator:
     def __init__(self):
         self._antLangton = generateMap(pygame.time.get_ticks())
-        self._map = self._antLangton.runGenerate()
-        self._water: pygame.Surface = pygame.image.load("background/Water.png")
-        self._swamp: pygame.Surface = pygame.image.load("background/swamp.png")
-        self._grass: list[pygame.Surface] = [pygame.image.load("background/Grass1.png"),
-                                             pygame.image.load("background/Grass2.png"),
-                                             pygame.image.load("background/Grass3.png")]
-        self._grassWidth, self._grassHeight = self._grass[0].get_width(), self._grass[0].get_height()
-        self._waterWidth, self._waterHeight = self._water.get_width(), self._water.get_height()
-        self._swampWidth, self._swampHeight = self._swamp.get_width(), self._swamp.get_height()
-        self._grass_tiles: list[pygame.Surface] = [random.choice(self._grass) for _ in
-                                                   range(len(self._map) * len(self._map[0]))]
-        self._tile_width, self._tile_height = self._swampWidth, self._swampHeight
+        self._map, self._tile_map = self._antLangton.runGenerate()
+        self._grass = GrassTile()
+        self._water = WaterTile()
+        self._rocks = RocksTile()
+
+        self._tile_width, self._tile_height = self._rocks.getWidth(), self._rocks.getHeight()
         self._tile_amount_x, self._tile_amount_y = len(self._map[0]), len(self._map)
 
     def fillMap(self, screen: pygame.Surface, cameraX: int, cameraY: int):
-        grass_tile_index: int = 0
-        for y, line in enumerate(self._map):
+        for y, line in enumerate(self._tile_map):
             for x, tile in enumerate(line):
-                if tile == 2:
-                    screen.blit(self._water, (x * self._waterWidth - cameraX, y * self._waterHeight - cameraY))
-                elif tile == 1:
-                    screen.blit(self._swamp, (x * self._swampWidth - cameraX, y * self._swampHeight - cameraY))
-                elif tile == 0:
-                    screen.blit(self._grass_tiles[grass_tile_index],
-                                (x * self._grassWidth - cameraX, y * self._grassHeight - cameraY))
-                    grass_tile_index += 1
+                tile.draw(screen, x, y, cameraX, cameraY)
 
-    def getMap(self) -> list[list[int]]:
-        return self._map
+    def getMap(self) -> list[list[BaseTile]]:
+        return self._tile_map
 
     def getTileSize(self) -> tuple[int, int]:
         return self._tile_width, self._tile_height
@@ -88,6 +110,7 @@ class generateMap(Settings):
 
         self.white_ratio: int = 0
         self.map: list[list[int]] = [[0] * (self.width // 10) for i in range(self.height // 10)]
+        self._tile_map: list[list[BaseTile | None]] = [[None] * (self.width // 10) for i in range(self.height // 10)]
 
         self.ticks: int = ticks
         self.save_ticks: int = ticks
@@ -126,14 +149,22 @@ class generateMap(Settings):
     def runGenerate(self):
         running = True
         while running:
-            if pygame.time.get_ticks() - self.ticks > 1000:
+            if pygame.time.get_ticks() - self.ticks > 5000:
                 rows = len(self.map)
                 cols = len(self.map[0])
                 final_map = [[2 for _ in range(cols + 2)] for _ in range(rows + 2)]
+                tile_map = [[WaterTile() for _ in range(cols + 2)] for _ in range(rows + 2)]
+                for y in range(self.height // 10):
+                    for x in range(self.width // 10):
+                        if self.grid[y][x] == self.black:
+                            self._tile_map[y][x] = GrassTile()
+                        else:
+                            self._tile_map[y][x] = RocksTile()
                 for i in range(rows):
                     for j in range(cols):
                         final_map[i + 1][j + 1] = self.map[i][j]
-                return final_map
+                        tile_map[i + 1][j + 1] = self._tile_map[i][j]
+                return final_map, tile_map
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False

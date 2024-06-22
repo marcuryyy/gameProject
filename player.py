@@ -2,15 +2,12 @@ import pygame
 import gameMap
 from abc import ABC, abstractmethod
 import os
-from math import ceil
-from EC.Component import components
 
 pygame.init()
 
 
 class Player:
-    def __init__(self, screen: pygame.Surface, health: components.Health,
-                 stamina: components.Stamina, speed: components.Speed):
+    def __init__(self, screen: pygame.Surface):
         self._screen = screen
         self.player_image: pygame.Surface = pygame.image.load("playerAnimations/idle/idle1.png")
         self._idleFrames: list[str] = os.listdir("playerAnimations/idle")
@@ -20,18 +17,19 @@ class Player:
         self._runFramesLeft: list[str] = os.listdir("playerAnimations/leftRun")
         self._runFrameLeft: int = 0
         self._hitbox: pygame.Rect = pygame.Rect((0, 0), (90, 90))
-        self._x: int = self._hitbox.midbottom[0] + 1000
-        self._y: int = self._hitbox.midbottom[1] + 1000
-        self._speed: components.Speed = speed
-        self._hp: components.Health = health
-        self._stamina: components.Stamina = stamina
-        self._heatlhbar: HealthBar = HealthBar(5, 5, 200, 30, self._hp.getMAXHP())
-        self._staminabar: StaminaBar = StaminaBar(5, 50, 200, 30, self._stamina.getStamina())
-        self._dashLength: int = 100
+        self._x: int = self._hitbox.topleft[0] + 1000
+        self._y: int = self._hitbox.topleft[1] + 1000
+        self._speed: int = 4
         self._isAttacking: bool = False
         self._isDashing: bool = False
         self._isRunningRight: bool = False
         self._isRunningLeft: bool = False
+        self._maxHealth: int = 500
+        self._hp: int = self._maxHealth
+        self._stamina: int = 100
+        self._heatlhbar: HealthBar = HealthBar(5, 5, 200, 30, self._hp)
+        self._staminabar: StaminaBar = StaminaBar(5, 50, 200, 30, self._stamina)
+        self._dashLength: int = 100
 
     def update(self, cameraX: int, cameraY: int):
         if not (self._isRunningLeft or self._isRunningRight):
@@ -53,8 +51,8 @@ class Player:
         offset_x: int = self._hitbox.centerx - self.player_image.get_width() // 2
         offset_y: int = self._hitbox.centery - self.player_image.get_height() // 2
         self._screen.blit(self.player_image, (offset_x - cameraX, offset_y - cameraY))
-        if self._stamina.getStamina() < 100:
-            self._stamina.increaseStamina(0.1)
+        if self._stamina < 100:
+            self._stamina += 0.1
             self._isDashing = False
 
     def handle_keys(self, game_map: gameMap.GameMapCreator):
@@ -62,43 +60,39 @@ class Player:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LSHIFT]:
             self._isDashing = True
-        if game_map.getMap()[ceil((self._y + 90) // game_map.getTileSize()[1])][ceil((self._x + 90) // game_map.getTileSize()[0])] == 1:
-            self._speed.setSpeed(2)
-        else:
-            self._speed.setSpeed(self._speed.getMaxSpeed())
         if (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]) and (keys[pygame.K_UP] or keys[pygame.K_DOWN]):
-            self._speed.setSpeed(self._speed.getSpeed() / (2 ** 0.5))
+            self._speed = self._speed / (2 ** 0.5)
         if keys[pygame.K_LEFT]:
             if self._x - game_map.getTileSize()[0] > 10:
-                self._x -= self._speed.getSpeed()
+                self._x -= self._speed
             if self._isDashing:
-                if self._stamina.getStamina() >= 100:
-                    self._stamina.setStamina(0)
-                    self._x -= self._speed.getSpeed() * self._dashLength
+                if self._stamina >= 100:
+                    self._stamina = 0
+                    self._x -= self._speed * self._dashLength
             self.setRunningStateLeft(True)
         elif keys[pygame.K_RIGHT]:
             if abs(self._x - (game_map.getTileSize()[0] * (game_map.getTileAmount()[0] - 1))) > 15:
-                self._x += self._speed.getSpeed()
+                self._x += self._speed
             if self._isDashing:
-                if self._stamina.getStamina() >= 100:
-                    self._stamina.setStamina(0)
-                    self._x += self._speed.getSpeed() * self._dashLength
+                if self._stamina >= 100:
+                    self._stamina = 0
+                    self._x += self._speed * self._dashLength
             self.setRunningStateRight(True)
         if keys[pygame.K_UP]:
             if self._y - game_map.getTileSize()[1] > 20:
-                self._y -= self._speed.getSpeed()
+                self._y -= self._speed
             if self._isDashing:
-                if self._stamina.getStamina() >= 100:
-                    self._stamina.setStamina(0)
-                    self._y -= self._speed.getSpeed() * self._dashLength
+                if self._stamina >= 100:
+                    self._stamina = 0
+                    self._y -= self._speed * self._dashLength
             self.setRunningStateLeft(True)
         elif keys[pygame.K_DOWN]:
             if (game_map.getTileSize()[1] * (game_map.getTileAmount()[1] - 1)) - self._y > 1:
-                self._y += self._speed.getSpeed()
+                self._y += self._speed
             if self._isDashing:
-                if self._stamina.getStamina() == 100:
-                    self._stamina.setStamina(0)
-                    self._y += self._speed.getSpeed() * self._dashLength
+                if self._stamina == 100:
+                    self._stamina = 0
+                    self._y += self._speed * self._dashLength
             self.setRunningStateRight(True)
         self._hitbox.topleft = (self._x, self._y)
 
@@ -109,16 +103,13 @@ class Player:
         return self._hitbox
 
     def getHP(self) -> int:
-        return self._hp.getHP()
-
-    def getSpeed(self):
-        return self._speed
+        return self._hp
 
     def getMaxHP(self) -> int:
-        return self._hp.getMAXHP()
+        return self._maxHealth
 
     def getDamage(self, amount: int):
-        self._hp.decreaseHP(amount)
+        self._hp -= amount
 
     def getHealthBar(self):
         return self._heatlhbar
@@ -130,22 +121,25 @@ class Player:
         return self._staminabar
 
     def getSTAMINA(self) -> int:
-        return self._stamina.getStamina()
+        return self._stamina
 
     def getDashState(self) -> bool:
         return self._isDashing
 
     def addHealth(self, newHealth: int):
-        if self._hp.getHP() + newHealth <= 500:
-            self._hp.increaseHP(newHealth)
+        if self._hp + newHealth <= 500:
+            self._hp += newHealth
         else:
-            self._hp.setHP(self._hp.getMAXHP())
+            self._hp = 500
 
     def setRunningStateRight(self, state: bool):
         self._isRunningRight = state
 
     def setRunningStateLeft(self, state: bool):
         self._isRunningLeft = state
+
+    def setSpeed(self, newSpeed: int):
+        self._speed = newSpeed
 
 
 class Bar(ABC):

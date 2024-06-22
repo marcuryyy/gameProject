@@ -33,7 +33,11 @@ class BaseEnemy(ABC):
         pass
 
     @abstractmethod
-    def getDamage(self, amount: int | float):
+    def Damage(self, amount: int | float):
+        pass
+
+    @abstractmethod
+    def getDamage(self):
         pass
 
     @abstractmethod
@@ -87,7 +91,7 @@ class GhostEnemy(BaseEnemy):
         self.enemy_image: pygame.Surface = pygame.image.load(self._runFramesRight[0])
         self._hitbox: pygame.Rect = pygame.Rect((0, 0), (80, 110))
         self._x, self._y = 0, 0
-        self.speed: int | float = 2.5
+        self.speed: int | float = 2
         self._health: int = 10
         self._isDrawn: bool = False
         self._damage: int = 1
@@ -141,9 +145,12 @@ class GhostEnemy(BaseEnemy):
         if self._hitbox.colliderect(player_hitbox):
             player.getDamage(self._damage)
 
-    def getDamage(self, amount: int | float):
-        self.enemy_image = pygame.image.load(self._runFramesRight[0])
+    def Damage(self, amount: int | float):
+        self.enemy_image = self.enemy_image = pygame.image.load(self._runFramesLeft[0])
         self._health -= amount
+
+    def getDamage(self):
+        return self._damage
 
     def getHitbox(self) -> pygame.Rect:
         return self._hitbox
@@ -249,9 +256,12 @@ class ZombieEnemy(BaseEnemy):
         if self._hitbox.colliderect(player_hitbox):
             player.getDamage(self._damage)
 
-    def getDamage(self, amount: int | float):
+    def Damage(self, amount: int | float):
         self.enemy_image = self.enemy_image = pygame.image.load(self._runFramesLeft[0])
         self._health -= amount
+
+    def getDamage(self):
+        return self._damage
 
     def getHitbox(self) -> pygame.Rect:
         return self._hitbox
