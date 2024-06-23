@@ -7,9 +7,10 @@ import Enemy
 import drops
 import gameMap
 import player
-import diffProjectiles
+import projectileNpet
 import math
 import random
+
 pygame.init()
 pygame.font.init()
 pygame.mixer.init()
@@ -110,9 +111,6 @@ class SkillsScreen:
         self._settingsLabel.draw()
         self._backButton.draw()
         self._buyButton.draw()
-
-    def drawUpdateText(self):
-        pass
 
 
 class LoadingScreen:
@@ -263,7 +261,7 @@ class GameScene:
         self._playerX: int = self._player.getCoordinates()[0]
         self._playerY: int = self._player.getCoordinates()[1]
         self._closestEnemy: Enemy.BaseEnemy | None = None
-        self._projectiles: list[diffProjectiles.FireProjectile] = []
+        self._projectiles: list[projectileNpet.FireProjectile] = []
         self._cameraSpeed: int = 1
         self._enemyCounter: int = 0
         self._difficulty: int = 2
@@ -273,12 +271,12 @@ class GameScene:
 
         self._enemies: list[Enemy.BaseEnemy] = []
         self._droppedGoods: list[drops] = []
-        self._pets: list[diffProjectiles.BabyGhost] = []
+        self._pets: list[projectileNpet.BabyGhost] = []
         self._petDict: dict = {"GhostPet": 0}
 
         self._paused: bool = False
         self._lastShotTicks: int = 0
-
+        self._coinsLabel = player.CoinsAmount()
 
     def run_game(self):
         clock.tick(60)
@@ -287,7 +285,8 @@ class GameScene:
         pygame.mixer.music.load("music/kevin-macleod-8bit-dungeon-boss.mp3")
         pygame.mixer.music.play(-1)
         pygame.mixer.music.set_volume(settings.getVolume())
-        self._controller = Controller.Controller(self._player, self._enemies, self._map, self._tileMap)
+        self._controller = Controller.Controller(self._player, self._enemies, self._map, self._tileMap,
+                                                 self._projectiles, self._pets)
         while self._running and not self._paused:
             pygame.display.update()
             for event in pygame.event.get():
@@ -308,8 +307,8 @@ class GameScene:
             self.processProjectiles()
             self.processDrops()
             self.processPets()
-            self.processPlayerBars()
-            self._controller.update(self._player, self._enemies)
+            self.processBarsAndText()
+            self._controller.update(self._player, self._enemies, self._projectiles, self._pets)
             pygame.display.flip()
 
     def setState(self, state: bool):
@@ -360,29 +359,28 @@ class GameScene:
             return enemyAmount[difficulty[self._difficulty]]
 
     def processProjectiles(self):
+        self._projectiles = self._controller.getProjectiles()
         current_ticks = pygame.time.get_ticks()
         if not self._projectiles:
-            projectile = diffProjectiles.FireProjectile(self._player.getHitbox().centerx,
-                                                        self._player.getHitbox().centery, self._closestEnemy,
-                                                        pygame.time.get_ticks(), self._camera_rect.x,
-                                                        self._camera_rect.y)
+            projectile = projectileNpet.FireProjectile(self._player.getHitbox().centerx,
+                                                       self._player.getHitbox().centery, self._closestEnemy,
+                                                       pygame.time.get_ticks(), self._camera_rect.x,
+                                                       self._camera_rect.y)
             self._projectiles.append(projectile)
         else:
             element = self._projectiles[-1]
             if current_ticks - self._lastShotTicks > element.get_cd():
                 self._lastShotTicks = current_ticks
-                projectile = diffProjectiles.FireProjectile(self._player.getHitbox().centerx,
-                                                            self._player.getHitbox().centery, self._closestEnemy,
-                                                            current_ticks, self._camera_rect.x,
-                                                            self._camera_rect.y)
+                projectile = projectileNpet.FireProjectile(self._player.getHitbox().centerx,
+                                                           self._player.getHitbox().centery, self._closestEnemy,
+                                                           current_ticks, self._camera_rect.x,
+                                                           self._camera_rect.y)
                 self._projectiles.append(projectile)
         for element in self._projectiles[:]:
-            if element.destroy(pygame.time.get_ticks()):
+            if element.destroyOnTime(pygame.time.get_ticks()):
                 self._projectiles.remove(element)
             else:
                 element.update(self._screen, self._camera_rect.x, self._camera_rect.y)
-                if element.killOnCollision(self._enemies):
-                    self._projectiles.remove(element)
 
     def processEnemies(self):
         if self._enemyCounter < self._maxEnemyCount:
@@ -402,6 +400,7 @@ class GameScene:
                 self._closestEnemy = enemy
             enemy.followPlayer(self._player, self._playerX, self._playerY, self._camera_rect.x, self._camera_rect.y)
             if enemy.getHP() <= 0:
+                self._player.increaseCoins()
                 dropped = enemy.dropGoods(self._screen, enemy_x, enemy_y, self._petDict)
                 if dropped:
                     self._droppedGoods.append(dropped)
@@ -414,16 +413,17 @@ class GameScene:
             result = drop.onPickUp(self._player)
             if result:
                 if result == "GhostPet":
-                    self._pets.append(diffProjectiles.BabyGhost(self._screen, self._playerX, self._playerY))
+                    self._pets.append(projectileNpet.BabyGhost(self._screen, self._playerX, self._playerY))
                     self._petDict["GhostPet"] += 1
                 self._droppedGoods.remove(drop)
 
-    def processPlayerBars(self):
+    def processBarsAndText(self):
         self._player.getHealthBar().draw(self._screen, self._player.getHP())
         self._player.getStaminaBar().draw(self._screen, self._player.getSTAMINA())
+        self._coinsLabel.draw_coins(self._screen, self._player.getCoins())
 
     def processPlayer(self):
-        self._player.handle_keys(self._mapCreator)
+        self._player.handle_keys()
         self._playerX, self._playerY = self._player.getCoordinates()
         self._camera_rect.center = (self._playerX, self._playerY)
         if self._player.getHP() > 0:
@@ -697,9 +697,10 @@ class BuyButton(Button):
         pygame.display.update()
 
     def do_on_click(self, event: pygame.event.Event):
-        if self._button.collidepoint(event.pos):
-            gameScene.getPlayer().getSpeed().setMaxSpeed(6)
+        if self._button.collidepoint(event.pos) and gameScene.getPlayer().getCoins() >= 100:
+            gameScene.getPlayer().setMaxSpeed(5)
             pygame.mixer_music.load("music/buySound.mp3")
+            pygame.mixer.music.set_volume(settings.getVolume())
             pygame.mixer_music.play()
 
 

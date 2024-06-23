@@ -2,18 +2,18 @@ import copy
 
 import pygame
 import random
-import numpy
+
 
 class Queue:
-    def __init__(self, lst):
+    def __init__(self, lst: list):
         self._queue = lst
         self._length = len(self._queue)
 
-    def enqueue(self, elem):
+    def enqueue(self, elem: any):
         self._queue.append(copy.deepcopy(elem))
         self._length += 1
 
-    def dequeue(self):
+    def dequeue(self) -> any:
         if self.size() > 0:
             dequeue_elem = self._queue[0]
             self._queue = self._queue[1:]
@@ -76,7 +76,7 @@ class GameMapCreator:
             for x, tile in enumerate(line):
                 tile.draw(screen, x, y, cameraX, cameraY)
 
-    def getMap(self) -> (list[list[int]],list[list[BaseTile]]):
+    def getMap(self) -> (list[list[int]], list[list[BaseTile]]):
         return self._map, self._tile_map
 
     def getTileSize(self) -> tuple[int, int]:
