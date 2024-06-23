@@ -4,6 +4,7 @@ from abc import abstractmethod, ABC
 
 import Controller
 import Enemy
+import View
 import drops
 import gameMap
 import player
@@ -128,8 +129,8 @@ class LoadingScreen:
         self._loadingLabel.draw()
         pygame.draw.rect(self._screen, "white", self._loadingSquare, 2)
         pygame.display.update()
-        self._mapCreator = gameMap.GameMapCreator()
-        mapStory: gameMap.Queue = self._mapCreator.getMapQueue()
+        self._mapView = View.GameSceneView()
+        mapStory: gameMap.Queue = self._mapView.getMapQueue()
         while self._runLoadingScreen:
             pygame.display.update()
             for event in pygame.event.get():
@@ -161,7 +162,7 @@ class LoadingScreen:
             self.runLoadingScreen()
 
     def getMapUtils(self):
-        return self._mapCreator
+        return self._mapView
 
 
 class SettingsScreen:
@@ -287,6 +288,7 @@ class GameScene:
         pygame.mixer.music.set_volume(settings.getVolume())
         self._controller = Controller.Controller(self._player, self._enemies, self._map, self._tileMap,
                                                  self._projectiles, self._pets)
+        self._entityViewer = View.EntityView(self._screen, self._player, self._enemies, self._projectiles, self._pets)
         while self._running and not self._paused:
             pygame.display.update()
             for event in pygame.event.get():
@@ -309,6 +311,8 @@ class GameScene:
             self.processPets()
             self.processBarsAndText()
             self._controller.update(self._player, self._enemies, self._projectiles, self._pets)
+            self._controller.handle_input()
+            self._entityViewer.updateView(self._player, self._enemies, self._projectiles, self._pets)
             pygame.display.flip()
 
     def setState(self, state: bool):
@@ -423,11 +427,10 @@ class GameScene:
         self._coinsLabel.draw_coins(self._screen, self._player.getCoins())
 
     def processPlayer(self):
-        self._player.handle_keys()
         self._playerX, self._playerY = self._player.getCoordinates()
         self._camera_rect.center = (self._playerX, self._playerY)
         if self._player.getHP() > 0:
-            self._player.update(self._camera_rect.x, self._camera_rect.y)
+            self._entityViewer.updatePlayer(self._camera_rect.x, self._camera_rect.y)
         else:
             self._paused = True
             pygame.mixer.music.stop()

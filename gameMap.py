@@ -60,34 +60,9 @@ class RocksTile(BaseTile):
         super().__init__("background/RockTile.jpg")
 
 
-class GameMapCreator:
+class MagmaTile(BaseTile):
     def __init__(self):
-        self._antLangton = generateMap(pygame.time.get_ticks())
-        self._map, self._tile_map = self._antLangton.runGenerate()
-        self._grass = GrassTile()
-        self._water = WaterTile()
-        self._rocks = RocksTile()
-
-        self._tile_width, self._tile_height = self._rocks.getWidth(), self._rocks.getHeight()
-        self._tile_amount_x, self._tile_amount_y = len(self._map[0]), len(self._map)
-
-    def fillMap(self, screen: pygame.Surface, cameraX: int, cameraY: int):
-        for y, line in enumerate(self._tile_map):
-            for x, tile in enumerate(line):
-                tile.draw(screen, x, y, cameraX, cameraY)
-
-    def getMap(self) -> (list[list[int]], list[list[BaseTile]]):
-        return self._map, self._tile_map
-
-    def getTileSize(self) -> tuple[int, int]:
-        return self._tile_width, self._tile_height
-
-    def getTileAmount(self) -> tuple[int, int]:
-        return self._tile_amount_x, self._tile_amount_y
-
-    def getMapQueue(self):
-        return self._antLangton.getQueue()
-
+        super().__init__("background/MagmaTile.jpg")
 
 class Settings:
     def __init__(self):

@@ -1,6 +1,7 @@
 import Enemy
 import projectileNpet
 import player
+import pygame
 
 
 class Controller:
@@ -18,8 +19,10 @@ class Controller:
                 if self._pet:
                     if self._pet[0].getHitbox().colliderect(enemy.getHitbox()):
                         enemy.Damage(self._pet[0].getDamage())
+
                 if self._player.getHitbox().colliderect(enemy.getHitbox()):
                     self._player.getDamage(enemy.getDamage())
+
                 maxDamageTimes, damageCounter = projectile.getDamageCounter()
                 if projectile.getHitbox().colliderect(enemy.getHitbox()):
                     if maxDamageTimes > damageCounter:
@@ -36,7 +39,7 @@ class Controller:
                     self._player.setAllStates(True)
                 if self._tile_map[y][x].__class__.__name__ == "RocksTile" and player_rect.colliderect(
                         self._tile_map[y][x].getHitbox()):
-                    self._player.setSpeed(self._player.getMaxSpeed()//2)
+                    self._player.setSpeed(self._player.getMaxSpeed() // 2)
                     self._player.setAllStates(True)
                 if self._tile_map[y][x].__class__.__name__ == "WaterTile" and player_rect.colliderect(
                         self._tile_map[y][x].getHitbox()):
@@ -48,6 +51,22 @@ class Controller:
                         self._player.setWalkUpState(False)
                     if self._player.getFacing().lower() == "down":
                         self._player.setWalkDownState(False)
+
+    def handle_input(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LSHIFT]:
+            self._player.setDashState(True)
+        if (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]) and (keys[pygame.K_UP] or keys[pygame.K_DOWN]):
+            self._player.setSpeedIfWalkingDiagonally()
+        if keys[pygame.K_LEFT]:
+            self._player.walkLeft()
+        elif keys[pygame.K_RIGHT]:
+            self._player.walkRight()
+        if keys[pygame.K_UP]:
+            self._player.walkUp()
+        elif keys[pygame.K_DOWN]:
+            self._player.walkDown()
+        self._player.setDashState(False)
 
     def update(self, playerEntity: player.Player, enemies: list[Enemy.BaseEnemy],
                projectiles: list[projectileNpet.FireProjectile], pet: list[projectileNpet.BabyGhost]):
