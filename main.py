@@ -246,6 +246,9 @@ class PauseMenu:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self._runMenu = False
+                        pygame.mixer.music.load("music/kevin-macleod-8bit-dungeon-boss.mp3")
+                        pygame.mixer.music.play(-1)
+                        pygame.mixer.music.set_volume(settings.getVolume())
                         gameScene.setPauseState(False)
 
     def getScreen(self) -> pygame.Surface:
@@ -670,6 +673,9 @@ class ResumeButton(Button):
 
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
+            pygame.mixer.music.load("music/kevin-macleod-8bit-dungeon-boss.mp3")
+            pygame.mixer.music.play(-1)
+            pygame.mixer.music.set_volume(settings.getVolume())
             gameScene.setPauseState(False)
             pauseMenu.setState(False)
 
@@ -718,7 +724,6 @@ class BuyButton(Button):
         if self._button.collidepoint(event.pos) and gameScene.getPlayer().getCoins() >= 100:
             gameScene.getPlayer().setMaxSpeed(5)
             gameScene.getPlayer().decreaseCoins(100)
-            print(1)
             pygame.mixer_music.load("music/buySound.mp3")
             pygame.mixer.music.set_volume(settings.getVolume())
             pygame.mixer_music.play()
