@@ -62,10 +62,11 @@ class EntityView:
         x, y = pet.getCoordinates()
         self._screen.blit(pet.getImage(), (x - cameraX, y - cameraY))
 
-    def drawUI(self, coinsLabel):
+    def drawUI(self, coinsLabel, killsLabel):
         self._player.getHealthBar().draw(self._screen, self._player.getHP())
         self._player.getStaminaBar().draw(self._screen, self._player.getSTAMINA())
         coinsLabel.draw_coins(self._screen, self._player.getCoins())
+        killsLabel.drawKills(self._screen, self._player.getKills())
 
     def updateView(self, player: player.Player, enemies: list[Enemy.BaseEnemy],
                    projectiles: list[projectileNpet.FireProjectile], pet: list[projectileNpet.BabyGhost]):

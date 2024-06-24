@@ -295,6 +295,7 @@ class GameScene:
         self._paused: bool = False
         self._lastShotTicks: int = 0
         self._coinsLabel = player.Coins()
+        self._killsLabel = player.Kills()
 
     def run_game(self):
         pygame.event.clear()
@@ -330,7 +331,7 @@ class GameScene:
             self._controller.update(self._player, self._enemies, self._projectiles, self._pets)
             self._controller.handle_input()
             self._entityViewer.updateView(self._player, self._enemies, self._projectiles, self._pets)
-            self._entityViewer.drawUI(self._coinsLabel)
+            self._entityViewer.drawUI(self._coinsLabel, self._killsLabel)
             pygame.display.flip()
 
     def setState(self, state: bool):
@@ -446,6 +447,7 @@ class GameScene:
             self._entityViewer.updateEnemies(enemy, self._camera_rect.x, self._camera_rect.y)
             if enemy.getHP() <= 0:
                 self._player.increaseCoins()
+                self._player.increaseKills()
                 dropped = enemy.dropGoods(self._screen, enemy_x, enemy_y, self._petDict)
                 if dropped:
                     self._droppedGoods.append(dropped)
@@ -689,6 +691,7 @@ class BackToMenuButton(Button):
 
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
+            gameScene.getPlayer().resetKills()
             gameScene.setPauseState(False)
             mainmenu.setState(True)
             gameScene.setState(False)
@@ -715,6 +718,7 @@ class BuyButton(Button):
         if self._button.collidepoint(event.pos) and gameScene.getPlayer().getCoins() >= 100:
             gameScene.getPlayer().setMaxSpeed(5)
             gameScene.getPlayer().decreaseCoins(100)
+            print(1)
             pygame.mixer_music.load("music/buySound.mp3")
             pygame.mixer.music.set_volume(settings.getVolume())
             pygame.mixer_music.play()

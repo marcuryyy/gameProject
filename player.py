@@ -32,6 +32,7 @@ class Player:
         self._staminabar: StaminaBar = StaminaBar(5, 50, 200, 30, self._stamina)
         self._dashLength: int = 100
         self._coins: int = 0
+        self._kills: int = 0
 
     def updateAnimation(self):
         self._hitbox.topleft = (self._x, self._y)
@@ -188,6 +189,14 @@ class Player:
     def decreaseCoins(self, amount: int):
         self._coins -= amount
 
+    def getKills(self) -> int:
+        return self._kills
+
+    def increaseKills(self):
+        self._kills += 1
+
+    def resetKills(self):
+        self._kills = 0
 
 class Bar(ABC):
     @abstractmethod
@@ -230,3 +239,11 @@ class Coins:
     def draw_coins(self, screen, coins: int):
         coin_text = self._coin_font.render(f"Монеты: {coins}", True, (255, 255, 255))
         screen.blit(coin_text, (5, 95))
+
+class Kills:
+    def __init__(self):
+        self._coin_font = pygame.font.Font(None, 36)
+
+    def drawKills(self, screen, kills: int):
+        coin_text = self._coin_font.render(f"Убийств: {kills}", True, (255, 255, 255))
+        screen.blit(coin_text, (5, 140))
