@@ -18,6 +18,7 @@ pygame.mixer.init()
 clock = pygame.time.Clock()
 ButtonsViewer = View.ButtonsViewer()
 TextViewer = View.LabelViewer()
+clock.tick(60)
 
 
 class Settings:
@@ -45,7 +46,6 @@ class MainMenu:
     def runMenu(self):
         self._screen.fill("black")
         self.drawButtons()
-
         while self._runMenu:
             pygame.display.update()
             for event in pygame.event.get():
@@ -297,7 +297,7 @@ class GameScene:
         self._coinsLabel = player.Coins()
 
     def run_game(self):
-        clock.tick(60)
+        pygame.event.clear()
         self._mapCreator = loadingScreen.getMapUtils()
         self._map, self._tileMap = self._mapCreator.getMap()
         pygame.mixer.music.load("music/kevin-macleod-8bit-dungeon-boss.mp3")
@@ -306,8 +306,8 @@ class GameScene:
         self._controller = Controller.Controller(self._player, self._enemies, self._map, self._tileMap,
                                                  self._projectiles, self._pets)
         self._entityViewer = View.EntityView(self._screen, self._player, self._enemies, self._projectiles, self._pets)
-        self.restartGame()
         while self._running and not self._paused:
+
             pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -339,10 +339,24 @@ class GameScene:
             gameScene.run_game()
 
     def restartGame(self):
-        self._pets = []
-        self._enemies = []
-        self._projectiles = []
-        self._player.setHP()
+
+        self._player: player.Player = player.Player(self._screen)
+        self._closestEnemy: Enemy.BaseEnemy | None = None
+        self._projectiles: list[projectileNpet.FireProjectile] = []
+        self._enemyCounter: int = 0
+
+        self._enemies: list[Enemy.BaseEnemy] = []
+        self._droppedGoods: list[drops] = []
+        self._pets: list[projectileNpet.BabyGhost] = []
+        self._petDict: dict = {"GhostPet": 0}
+
+        self._paused: bool = False
+        self._lastShotTicks: int = 0
+
+        mainmenu.setState(True)
+        gameScene.setState(False)
+        gameScene.setPauseState(False)
+        mainmenu.runMenu()
 
     def setDifficulty(self, player_health: int, player_max_health: int, ticks: int) -> int:
         difficulty: list = ["Very Easy", "Easy", "Medium", "Hard", "Very Hard", "Nearly Impossible", "Impossible"]
@@ -419,8 +433,8 @@ class GameScene:
         for enemy in self._enemies:
             if enemy.getDrawState() is not True:
                 enemy.create(self._playerX, self._playerY, self._camera_rect.x, self._camera_rect.y,
-                           self._mapCreator.getTileSize(), self._mapCreator.getTileAmount(),
-                           self._screen.get_size())
+                             self._mapCreator.getTileSize(), self._mapCreator.getTileAmount(),
+                             self._screen.get_size())
                 enemy.setDrawState()
             enemy_x, enemy_y = enemy.getCoordinates()
             current_distance = math.sqrt((enemy_x - self._playerX) ** 2 + (enemy_y - self._playerY) ** 2)
@@ -454,10 +468,8 @@ class GameScene:
         if self._player.getHP() > 0:
             self._entityViewer.updatePlayer(self._camera_rect.x, self._camera_rect.y)
         else:
-            self._paused = True
             pygame.mixer.music.stop()
-            pauseMenu.setState(True)
-            pauseMenu.runMenu()
+            self.restartGame()
 
     def processPets(self):
         for pet in self._pets:

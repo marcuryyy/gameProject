@@ -68,7 +68,7 @@ class GhostEnemy(BaseEnemy):
         self._hitbox: pygame.Rect = pygame.Rect((0, 0), (80, 110))
         self._x, self._y = 0, 0
         self.speed: int | float = 2
-        self._health: int = 2
+        self._health: int = 15
         self._isDrawn: bool = False
         self._damage: int = 1
 
