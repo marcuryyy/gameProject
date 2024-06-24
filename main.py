@@ -461,7 +461,7 @@ class GameScene:
 
     def processPets(self):
         for pet in self._pets:
-            pet.followPlayer(self._playerX, self._playerY, self._camera_rect.x, self._camera_rect.y, self._enemies)
+            pet.followPlayer(self._playerX, self._playerY, self._enemies)
             self._entityViewer.updatePets(pet, self._camera_rect.x, self._camera_rect.y)
 
     def setPauseState(self, state: bool):

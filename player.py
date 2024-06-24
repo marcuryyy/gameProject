@@ -18,7 +18,7 @@ class Player:
         self._hitbox: pygame.Rect = pygame.Rect((0, 0), (90, 90))
         self._x: int = self._hitbox.topleft[0] + 1000
         self._y: int = self._hitbox.topleft[1] + 1000
-        self._speed: int = 3
+        self._speed: int | float = 3
         self._maxSpeed: int = 3
         self._isDashing: bool = False
         self._isRunningRight: bool = False
@@ -170,7 +170,7 @@ class Player:
     def setMaxSpeed(self, newSpeed: int):
         self._maxSpeed = newSpeed
 
-    def setSpeed(self, newSpeed: int):
+    def setSpeed(self, newSpeed: int | float):
         self._speed = newSpeed
 
     def getMaxSpeed(self) -> int:

@@ -60,10 +60,6 @@ class RocksTile(BaseTile):
         super().__init__("background/RockTile.jpg")
 
 
-class MagmaTile(BaseTile):
-    def __init__(self):
-        super().__init__("background/MagmaTile.jpg")
-
 class Settings:
     def __init__(self):
         self.width, self.height = 200, 200
@@ -132,13 +128,11 @@ class generateMap(Settings):
                 for y in range(self.height // 10):
                     for x in range(self.width // 10):
                         if self.grid[y][x] == self.black:
-                            self._tile_map[y][x] = GrassTile()
+                            final_map[y + 1][x + 1] = 0
+                            tile_map[y + 1][x + 1] = GrassTile()
                         else:
-                            self._tile_map[y][x] = RocksTile()
-                for i in range(rows):
-                    for j in range(cols):
-                        final_map[i + 1][j + 1] = self.map[i][j]
-                        tile_map[i + 1][j + 1] = self._tile_map[i][j]
+                            final_map[y + 1][x + 1] = 1
+                            tile_map[y + 1][x + 1] = RocksTile()
                 return final_map, tile_map
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

@@ -45,7 +45,7 @@ class Controller:
                     self._player.setAllStates(True)
                 if self._tile_map[y][x].__class__.__name__ == "RocksTile" and player_rect.colliderect(
                         self._tile_map[y][x].getHitbox()):
-                    self._player.setSpeed(self._player.getMaxSpeed() // 2)
+                    self._player.setSpeed(self._player.getMaxSpeed() // 1.5)
                     self._player.setAllStates(True)
                 if self._tile_map[y][x].__class__.__name__ == "WaterTile" and player_rect.colliderect(
                         self._tile_map[y][x].getHitbox()):
