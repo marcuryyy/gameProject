@@ -182,6 +182,9 @@ class Player:
     def increaseCoins(self):
         self._coins += 1
 
+    def setHP(self):
+        self._hp = self._maxHealth
+
 
 class Bar(ABC):
     @abstractmethod

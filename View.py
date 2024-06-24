@@ -50,8 +50,22 @@ class EntityView:
         offset_y: int = self._player.getHitbox().centery - self._player.getPlayerImage().get_height() // 2
         self._screen.blit(self._player.getPlayerImage(), (offset_x - cameraX, offset_y - cameraY))
 
-    def updateEnemies(self):
-        pass
+    def updateEnemies(self, enemy: Enemy.BaseEnemy, cameraX: int, cameraY: int):
+        x, y = enemy.getCoordinates()
+        self._screen.blit(enemy.getImage(), (x - cameraX, y - cameraY))
+
+    def updateProjectiles(self, projectile: projectileNpet.FireProjectile, cameraX: int, cameraY: int):
+        x, y = projectile.getCoordinates()
+        self._screen.blit(projectile.getImage(), (x - cameraX, y - cameraY))
+
+    def updatePets(self, pet: projectileNpet.BabyGhost, cameraX: int, cameraY: int):
+        x, y = pet.getCoordinates()
+        self._screen.blit(pet.getImage(), (x - cameraX, y - cameraY))
+
+    def drawUI(self, coinsLabel):
+        self._player.getHealthBar().draw(self._screen, self._player.getHP())
+        self._player.getStaminaBar().draw(self._screen, self._player.getSTAMINA())
+        coinsLabel.draw_coins(self._screen, self._player.getCoins())
 
     def updateView(self, player: player.Player, enemies: list[Enemy.BaseEnemy],
                    projectiles: list[projectileNpet.FireProjectile], pet: list[projectileNpet.BabyGhost]):
@@ -59,3 +73,17 @@ class EntityView:
         self._enemies = enemies
         self._projectiles = projectiles
         self._pet = pet
+
+
+class ButtonsViewer:
+    @staticmethod
+    def drawButtons(screen, button, text, text_rect):
+        pygame.draw.rect(screen, "White", button)
+        screen.blit(text, text_rect)
+        pygame.display.update()
+
+
+class LabelViewer:
+    @staticmethod
+    def drawLabels(screen, text, text_rect):
+        screen.blit(text, text_rect)

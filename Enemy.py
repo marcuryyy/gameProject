@@ -17,11 +17,11 @@ class BaseEnemy(ABC):
         pass
 
     @abstractmethod
-    def followPlayer(self, *args):
+    def updateCoordinates(self, *args):
         pass
 
     @abstractmethod
-    def getDrawState(self):
+    def getDrawState(self) -> bool:
         pass
 
     @abstractmethod
@@ -33,23 +33,27 @@ class BaseEnemy(ABC):
         pass
 
     @abstractmethod
-    def getDamage(self):
+    def getDamage(self) -> int:
         pass
 
     @abstractmethod
-    def getHitbox(self):
+    def getHitbox(self) -> pygame.Rect:
         pass
 
     @abstractmethod
-    def getHP(self):
+    def getHP(self) -> int:
         pass
 
     @abstractmethod
-    def getCoordinates(self):
+    def getCoordinates(self) -> tuple[int, int]:
         pass
 
     @abstractmethod
     def dropGoods(self, *args):
+        pass
+
+    @abstractmethod
+    def getImage(self) -> pygame.Surface:
         pass
 
 
@@ -87,7 +91,7 @@ class GhostEnemy(BaseEnemy):
         self._screen.blit(self.enemy_image, (self._x - cameraX, self._y - cameraY))
         self._hitbox.topleft = (self._x, self._y)
 
-    def followPlayer(self, player: player.Player, x: int | float, y: int | float, cameraX: int, cameraY: int):
+    def updateCoordinates(self, player: player.Player, x: int | float, y: int | float, cameraX: int, cameraY: int):
         if not self._hitbox.colliderect(player.getHitbox()):
             dx, dy = x - self._x, y - self._y
             vector_length = math.hypot(dx, dy)
@@ -104,7 +108,6 @@ class GhostEnemy(BaseEnemy):
             if self._runFrameLeft >= 12:
                 self._runFrameLeft = 0
             self.enemy_image = pygame.image.load(f"Enemies/Ghost/GhostAnimations/leftRun/{self._runFramesRight[int(self._runFrameRight)]}").convert_alpha()
-        self._screen.blit(self.enemy_image, (self._x - cameraX, self._y - cameraY))
         self._hitbox.topleft = (self._x + 50, self._y)
 
     def getDrawState(self) -> bool:
@@ -142,6 +145,9 @@ class GhostEnemy(BaseEnemy):
             pseudoRandom.countChances("None", False)
         return goods
 
+    def getImage(self) -> pygame.Surface:
+        return self.enemy_image
+
 
 class ZombieEnemy(BaseEnemy):
     def __init__(self, screen: pygame.Surface):
@@ -177,7 +183,7 @@ class ZombieEnemy(BaseEnemy):
         self._screen.blit(self.enemy_image, (self._x - cameraX, self._y - cameraY))
         self._hitbox.topleft = (self._x, self._y)
 
-    def followPlayer(self, player: player.Player, x: int | float, y: int | float, cameraX: int, cameraY: int):
+    def updateCoordinates(self, player: player.Player, x: int | float, y: int | float, cameraX: int, cameraY: int):
         if not self._hitbox.colliderect(player.getHitbox()):
             dx, dy = x - self._x, y - self._y
             vector_length = math.hypot(dx, dy)
@@ -194,7 +200,6 @@ class ZombieEnemy(BaseEnemy):
             if self._runFrameLeft >= 8:
                 self._runFrameLeft = 0
             self.enemy_image = pygame.image.load(f"Enemies/Zombie/ZombieAnimations/leftRun/{self._runFramesLeft[int(self._runFrameLeft)]}").convert_alpha()
-        self._screen.blit(self.enemy_image, (self._x - cameraX, self._y - cameraY))
         self._hitbox.topleft = (self._x + 30, self._y + 30)
 
     def getDrawState(self) -> bool:
@@ -224,6 +229,9 @@ class ZombieEnemy(BaseEnemy):
         if random.randint(1, 2) == 2:
             goods = drops.HealthRegeneration(screen, x, y)
         return goods
+
+    def getImage(self) -> pygame.Surface:
+        return self.enemy_image
 
 
 pseudoRandom = pseudoRandomFunc.pseudoRandom()

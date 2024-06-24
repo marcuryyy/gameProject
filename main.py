@@ -16,6 +16,8 @@ pygame.init()
 pygame.font.init()
 pygame.mixer.init()
 clock = pygame.time.Clock()
+ButtonsViewer = View.ButtonsViewer()
+TextViewer = View.LabelViewer()
 
 
 class Settings:
@@ -43,6 +45,7 @@ class MainMenu:
     def runMenu(self):
         self._screen.fill("black")
         self.drawButtons()
+
         while self._runMenu:
             pygame.display.update()
             for event in pygame.event.get():
@@ -64,10 +67,9 @@ class MainMenu:
             self.runMenu()
 
     def drawButtons(self):
-        self._playbutton.draw()
-        self._skillsButton.draw()
-        self._SettingsButton.draw()
-        self._QuitButton.draw()
+        for button in self._buttons:
+            utils = button.getUtils()
+            ButtonsViewer.drawButtons(self._screen, *utils)
 
 
 class SkillsScreen:
@@ -90,7 +92,8 @@ class SkillsScreen:
 
     def runSettings(self):
         self._screen.fill("black")
-        self.drawButtonsAndNonUpdateText()
+        self.drawNonUpdateText()
+        self.drawButtons()
         self._screen.blit(self._whiteBackground, self._whiteRect)
         self._screen.blit(self._speedIcon, self._speedIconRect)
 
@@ -108,10 +111,14 @@ class SkillsScreen:
         if state:
             self.runSettings()
 
-    def drawButtonsAndNonUpdateText(self):
-        self._settingsLabel.draw()
-        self._backButton.draw()
-        self._buyButton.draw()
+    def drawNonUpdateText(self):
+        utils = self._settingsLabel.getUtils()
+        TextViewer.drawLabels(self._screen, *utils)
+
+    def drawButtons(self):
+        for button in self._buttons:
+            utils = button.getUtils()
+            ButtonsViewer.drawButtons(self._screen, *utils)
 
 
 class LoadingScreen:
@@ -171,6 +178,7 @@ class SettingsScreen:
         self._runLoadingScreen: bool = False
         self._settingsLabel = SettingsLabel(self._screen)
         self._musicLabelText = MusicLabelText(self._screen)
+        self._labels = [self._settingsLabel, self._musicLabelText]
         self._musicVolumeLevel = MusicVolumeLevel(self._screen)
         self._runSettingsScreen: bool = False
         self._backButton = BackButton(self._screen, 250, 50)
@@ -180,7 +188,9 @@ class SettingsScreen:
 
     def runSettings(self):
         self._screen.fill("black")
-        self.drawButtonsAndNonUpdateText()
+        self.drawNonUpdateText()
+        self.drawButtons()
+        self.drawUpdateText()
         while self._runSettingsScreen:
             pygame.display.update()
             for event in pygame.event.get():
@@ -195,15 +205,20 @@ class SettingsScreen:
         if state:
             self.runSettings()
 
-    def drawButtonsAndNonUpdateText(self):
-        self._settingsLabel.draw()
-        self._musicLabelText.draw()
-        self._backButton.draw()
-        self._decreaseMusicVolume.draw()
-        self._increaseMusicVolume.draw()
+    def drawNonUpdateText(self):
+        for label in self._labels:
+            utils = label.getUtils()
+            TextViewer.drawLabels(self._screen, *utils)
+
+    def drawButtons(self):
+        for button in self._buttons:
+            utils = button.getUtils()
+            ButtonsViewer.drawButtons(self._screen, *utils)
 
     def drawUpdateText(self):
-        self._musicVolumeLevel.draw()
+        self._musicVolumeLevel.updateText()
+        utils = self._musicVolumeLevel.getUtils()
+        TextViewer.drawLabels(self._screen, *utils)
 
 
 class PauseMenu:
@@ -289,6 +304,7 @@ class GameScene:
         self._controller = Controller.Controller(self._player, self._enemies, self._map, self._tileMap,
                                                  self._projectiles, self._pets)
         self._entityViewer = View.EntityView(self._screen, self._player, self._enemies, self._projectiles, self._pets)
+        self.restartGame()
         while self._running and not self._paused:
             pygame.display.update()
             for event in pygame.event.get():
@@ -309,16 +325,22 @@ class GameScene:
             self.processProjectiles()
             self.processDrops()
             self.processPets()
-            self.processBarsAndText()
             self._controller.update(self._player, self._enemies, self._projectiles, self._pets)
             self._controller.handle_input()
             self._entityViewer.updateView(self._player, self._enemies, self._projectiles, self._pets)
+            self._entityViewer.drawUI(self._coinsLabel)
             pygame.display.flip()
 
     def setState(self, state: bool):
         self._running = state
         if state:
             gameScene.run_game()
+
+    def restartGame(self):
+        self._pets = []
+        self._enemies = []
+        self._projectiles = []
+        self._player.setHP()
 
     def setDifficulty(self, player_health: int, player_max_health: int, ticks: int) -> int:
         difficulty: list = ["Very Easy", "Easy", "Medium", "Hard", "Very Hard", "Nearly Impossible", "Impossible"]
@@ -384,7 +406,8 @@ class GameScene:
             if element.destroyOnTime(pygame.time.get_ticks()):
                 self._projectiles.remove(element)
             else:
-                element.update(self._screen, self._camera_rect.x, self._camera_rect.y)
+                element.update()
+                self._entityViewer.updateProjectiles(element, self._camera_rect.x, self._camera_rect.y)
 
     def processEnemies(self):
         if self._enemyCounter < self._maxEnemyCount:
@@ -402,7 +425,9 @@ class GameScene:
             if current_distance < closest_distance:
                 closest_distance = current_distance
                 self._closestEnemy = enemy
-            enemy.followPlayer(self._player, self._playerX, self._playerY, self._camera_rect.x, self._camera_rect.y)
+            enemy.updateCoordinates(self._player, self._playerX, self._playerY, self._camera_rect.x,
+                                    self._camera_rect.y)
+            self._entityViewer.updateEnemies(enemy, self._camera_rect.x, self._camera_rect.y)
             if enemy.getHP() <= 0:
                 self._player.increaseCoins()
                 dropped = enemy.dropGoods(self._screen, enemy_x, enemy_y, self._petDict)
@@ -421,11 +446,6 @@ class GameScene:
                     self._petDict["GhostPet"] += 1
                 self._droppedGoods.remove(drop)
 
-    def processBarsAndText(self):
-        self._player.getHealthBar().draw(self._screen, self._player.getHP())
-        self._player.getStaminaBar().draw(self._screen, self._player.getSTAMINA())
-        self._coinsLabel.draw_coins(self._screen, self._player.getCoins())
-
     def processPlayer(self):
         self._playerX, self._playerY = self._player.getCoordinates()
         self._camera_rect.center = (self._playerX, self._playerY)
@@ -440,6 +460,7 @@ class GameScene:
     def processPets(self):
         for pet in self._pets:
             pet.followPlayer(self._playerX, self._playerY, self._camera_rect.x, self._camera_rect.y, self._enemies)
+            self._entityViewer.updatePets(pet, self._camera_rect.x, self._camera_rect.y)
 
     def setPauseState(self, state: bool):
         self._paused = state
@@ -453,11 +474,11 @@ class Button(ABC):
         self._font: pygame.font.Font = pygame.font.SysFont(None, 50)
 
     @abstractmethod
-    def draw(self):
+    def do_on_click(self, event: pygame.event.Event):
         pass
 
     @abstractmethod
-    def do_on_click(self, event: pygame.event.Event):
+    def getUtils(self):
         pass
 
 
@@ -472,16 +493,14 @@ class PlayButton(Button):
         self._text: pygame.Surface = self._font.render("Играть", True, "black")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
 
-    def draw(self):
-        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
-        self._screen.blit(self._text, self._text_rectangle)
-        pygame.display.update()
-
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
             if mainmenu.getState():
                 mainmenu.setState(False)
                 loadingScreen.setState(True)
+
+    def getUtils(self):
+        return self._button, self._text, self._text_rectangle
 
 
 class SkillsButton(Button):
@@ -496,16 +515,14 @@ class SkillsButton(Button):
         self._text: pygame.Surface = self._font.render("Навыки", True, "black")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
 
-    def draw(self):
-        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
-        self._screen.blit(self._text, self._text_rectangle)
-        pygame.display.update()
-
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
             if mainmenu.getState():
                 mainmenu.setState(False)
                 skillsMenu.setState(True)
+
+    def getUtils(self):
+        return self._button, self._text, self._text_rectangle
 
 
 class SettingsButton(Button):
@@ -520,16 +537,14 @@ class SettingsButton(Button):
         self._text: pygame.Surface = self._font.render("Настройки", True, "black")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
 
-    def draw(self):
-        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
-        self._screen.blit(self._text, self._text_rectangle)
-        pygame.display.update()
-
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
             if mainmenu.getState():
                 mainmenu.setState(False)
                 settingsScreen.setState(True)
+
+    def getUtils(self):
+        return self._button, self._text, self._text_rectangle
 
 
 class QuitButton(Button):
@@ -544,15 +559,13 @@ class QuitButton(Button):
         self._text: pygame.Surface = self._font.render("Выйти", True, "black")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
 
-    def draw(self):
-        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
-        self._screen.blit(self._text, self._text_rectangle)
-        pygame.display.update()
-
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
             if mainmenu.getState():
                 pygame.quit()
+
+    def getUtils(self):
+        return self._button, self._text, self._text_rectangle
 
 
 class BackButton(Button):
@@ -568,15 +581,13 @@ class BackButton(Button):
         self._text: pygame.Surface = self._font.render("Выйти", True, "black")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
 
-    def draw(self):
-        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
-        self._screen.blit(self._text, self._text_rectangle)
-        pygame.display.update()
-
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
             mainmenu.setState(True)
             settingsScreen.setState(False)
+
+    def getUtils(self):
+        return self._button, self._text, self._text_rectangle
 
 
 class DecreaseMusicVolume(Button):
@@ -593,17 +604,15 @@ class DecreaseMusicVolume(Button):
         self._fill_rect = pygame.Rect(0, 0, 80, 75)
         self._fill_rect.center = (self._screen.get_size()[0] - 135, 175)
 
-    def draw(self):
-        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
-        self._screen.blit(self._text, self._text_rectangle)
-        pygame.display.update()
-
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
             if settings.getVolume() > 0:
                 settings.setVolume(settings.getVolume() - 0.05)
                 self._screen.fill("black", self._fill_rect)
                 settingsScreen.drawUpdateText()
+
+    def getUtils(self):
+        return self._button, self._text, self._text_rectangle
 
 
 class IncreaseMusicVolume(Button):
@@ -620,17 +629,15 @@ class IncreaseMusicVolume(Button):
         self._fill_rect = pygame.Rect(0, 0, 80, 75)
         self._fill_rect.center = (self._screen.get_size()[0] - 135, 175)
 
-    def draw(self):
-        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
-        self._screen.blit(self._text, self._text_rectangle)
-        pygame.display.update()
-
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
             if settings.getVolume() < 1:
                 settings.setVolume(settings.getVolume() + 0.05)
                 self._screen.fill("black", self._fill_rect)
                 settingsScreen.drawUpdateText()
+
+    def getUtils(self):
+        return self._button, self._text, self._text_rectangle
 
 
 class ResumeButton(Button):
@@ -645,15 +652,13 @@ class ResumeButton(Button):
         self._text: pygame.Surface = self._font.render("Вернуться", True, "black")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
 
-    def draw(self):
-        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
-        self._screen.blit(self._text, self._text_rectangle)
-        pygame.display.update()
-
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
             gameScene.setPauseState(False)
             pauseMenu.setState(False)
+
+    def getUtils(self):
+        return self._button, self._text, self._text_rectangle
 
 
 class BackToMenuButton(Button):
@@ -668,17 +673,15 @@ class BackToMenuButton(Button):
         self._text: pygame.Surface = self._font.render("Выйти", True, "black")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
 
-    def draw(self):
-        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
-        self._screen.blit(self._text, self._text_rectangle)
-        pygame.display.update()
-
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
             gameScene.setPauseState(False)
             mainmenu.setState(True)
             gameScene.setState(False)
             pauseMenu.setState(False)
+
+    def getUtils(self):
+        return self._button, self._text, self._text_rectangle
 
 
 class BuyButton(Button):
@@ -694,11 +697,6 @@ class BuyButton(Button):
         self._text: pygame.Surface = self._font.render("Купить", True, "black")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=self._button.center)
 
-    def draw(self):
-        pygame.draw.rect(mainmenu.getScreen(), "White", self._button)
-        self._screen.blit(self._text, self._text_rectangle)
-        pygame.display.update()
-
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos) and gameScene.getPlayer().getCoins() >= 100:
             gameScene.getPlayer().setMaxSpeed(5)
@@ -706,13 +704,16 @@ class BuyButton(Button):
             pygame.mixer.music.set_volume(settings.getVolume())
             pygame.mixer_music.play()
 
+    def getUtils(self):
+        return self._button, self._text, self._text_rectangle
+
 
 class TextLabel(ABC):
     def __init__(self):
         self._font: pygame.font.Font = pygame.font.SysFont(None, 50)
 
     @abstractmethod
-    def draw(self):
+    def getUtils(self):
         pass
 
 
@@ -723,8 +724,8 @@ class LoadingLabel(TextLabel):
         self._text: pygame.Surface = self._font.render("Загрузка...", True, "white")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=(self._screen.get_size()[0] // 2, 50))
 
-    def draw(self):
-        self._screen.blit(self._text, self._text_rectangle)
+    def getUtils(self):
+        return self._text, self._text_rectangle
 
 
 class SettingsLabel(TextLabel):
@@ -734,8 +735,8 @@ class SettingsLabel(TextLabel):
         self._text: pygame.Surface = self._font.render("Настройки", True, "white")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=(self._screen.get_size()[0] // 2, 50))
 
-    def draw(self):
-        self._screen.blit(self._text, self._text_rectangle)
+    def getUtils(self):
+        return self._text, self._text_rectangle
 
 
 class SkillsLabel(TextLabel):
@@ -745,8 +746,8 @@ class SkillsLabel(TextLabel):
         self._text: pygame.Surface = self._font.render("Навыки", True, "white")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=(self._screen.get_size()[0] // 2, 50))
 
-    def draw(self):
-        self._screen.blit(self._text, self._text_rectangle)
+    def getUtils(self):
+        return self._text, self._text_rectangle
 
 
 class MusicLabelText(TextLabel):
@@ -756,25 +757,23 @@ class MusicLabelText(TextLabel):
         self._text: pygame.Surface = self._font.render("Уровень громкости, %", True, "white")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=(self._screen.get_size()[0] // 3, 175))
 
-    def draw(self):
-        self._screen.blit(self._text, self._text_rectangle)
+    def getUtils(self):
+        return self._text, self._text_rectangle
 
 
 class MusicVolumeLevel(TextLabel):
     def __init__(self, screen: pygame.Surface):
         super().__init__()
-        self._text_rectangle = None
-        self._text = None
         self._screen = screen
-
-    def draw(self):
         self._text: pygame.Surface = self._font.render(f"{round(settings.getVolume() * 100, 1)}", True, "white")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=(self._screen.get_size()[0] - 140, 175))
-        self._screen.blit(self._text, self._text_rectangle)
 
-    def getRect(self) -> pygame.Rect:
-        return self._text_rectangle
+    def getUtils(self):
+        return self._text, self._text_rectangle
 
+    def updateText(self):
+        self._text: pygame.Surface = self._font.render(f"{round(settings.getVolume() * 100, 1)}", True, "white")
+        self._text_rectangle: pygame.Rect = self._text.get_rect(center=(self._screen.get_size()[0] - 140, 175))
 
 settings = Settings()
 mainmenu = MainMenu()

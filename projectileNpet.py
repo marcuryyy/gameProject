@@ -28,11 +28,10 @@ class FireProjectile:
         self._damageTimes: int = 1
         self._damageTimesCounter: int = 0
 
-    def update(self, screen: pygame.Surface, cameraX: int, cameraY: int):
+    def update(self):
         self._pos[0] += self.dir_x * self.speed
         self._pos[1] += self.dir_y * self.speed
         self._rect = self.image.get_rect(center=self._pos)
-        screen.blit(self.image, (self._rect.x - cameraX, self._rect.y - cameraY))
 
     def get_cd(self) -> int:
         return self._cooldown
@@ -58,6 +57,12 @@ class FireProjectile:
     def destroyOnTime(self, currentTicks: int) -> bool | None:
         if currentTicks - self._spawnTicks > self._timeAlive:
             return True
+
+    def getCoordinates(self) -> tuple[int, int]:
+        return self._rect.x, self._rect.y
+
+    def getImage(self) -> pygame.Surface:
+        return self.image
 
 
 class BabyGhost:
@@ -93,7 +98,6 @@ class BabyGhost:
         self._hitbox.x += dx * self._speed
         self._hitbox.y += dy * self._speed
         self.processAnimation(enemy_x)
-        self._screen.blit(self.image, (self._hitbox.x - cameraX, self._hitbox.y - cameraY))
         if self._focusEnemy.getHP() < 1:
             self._isAttacking = False
             self._focusEnemy = None
@@ -123,3 +127,9 @@ class BabyGhost:
 
     def getDamage(self) -> int:
         return self._damage
+
+    def getCoordinates(self) -> tuple[int, int]:
+        return self._hitbox.x, self._hitbox.y
+
+    def getImage(self) -> pygame.Surface:
+        return self.image
