@@ -185,6 +185,9 @@ class Player:
     def setHP(self):
         self._hp = self._maxHealth
 
+    def decreaseCoins(self, amount: int):
+        self._coins -= amount
+
 
 class Bar(ABC):
     @abstractmethod
@@ -220,7 +223,7 @@ class StaminaBar(Bar):
         pygame.draw.rect(screen, "yellow", (self._x, self._y, self._width * ratio, self._height))
 
 
-class CoinsAmount:
+class Coins:
     def __init__(self):
         self._coin_font = pygame.font.Font(None, 36)
 

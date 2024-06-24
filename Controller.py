@@ -14,21 +14,27 @@ class Controller:
         self._pet: list[projectileNpet.BabyGhost] = pet
 
     def handle_collisions(self):
-        for projectile in self._projectiles:
-            for enemy in self._enemies:
-                if self._pet:
-                    if self._pet[0].getHitbox().colliderect(enemy.getHitbox()):
-                        enemy.Damage(self._pet[0].getDamage())
+        for enemy in self._enemies[:]:
+            if self._pet:
+                if self._pet[0].getHitbox().colliderect(enemy.getHitbox()):
+                    if pygame.time.get_ticks() - self._pet[0].getCD() > self._pet[0].getLastAttackTick():
+                        if enemy.Damage(self._pet[0].getDamage()):
+                            if enemy.getHP():
+                                self._enemies.remove(enemy)
+                        self._pet[0].setLastAttackTick(pygame.time.get_ticks())
 
-                if self._player.getHitbox().colliderect(enemy.getHitbox()):
-                    self._player.getDamage(enemy.getDamage())
+            if self._player.getHitbox().colliderect(enemy.getHitbox()):
+                self._player.getDamage(enemy.getDamage())
 
-                maxDamageTimes, damageCounter = projectile.getDamageCounter()
+            for projectile in self._projectiles[:]:
                 if projectile.getHitbox().colliderect(enemy.getHitbox()):
+                    maxDamageTimes, damageCounter = projectile.getDamageCounter()
                     if maxDamageTimes > damageCounter:
-                        enemy.Damage(projectile.getDamage())
-                        self._projectiles.remove(projectile)
+                        if enemy.Damage(projectile.getDamage()):
+                            if enemy.getHP():
+                                self._enemies.remove(enemy)
                         projectile.increaseDamageCounter()
+                    self._projectiles.remove(projectile)
 
         player_rect = self._player.getHitbox()
         for y, line in enumerate(self._game_map):

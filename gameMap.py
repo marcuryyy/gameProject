@@ -81,7 +81,7 @@ class generateMap(Settings):
         self.ant_y: int = self.height // 20
         self.ant_direction: int = 0
 
-        self.target_ratio: int | float = 95 / 100
+        self.target_ratio: int | float = 1 / 100
 
         self.white_ratio: int = 0
         self.map: list[list[int]] = [[0] * (self.width // 10) for i in range(self.height // 10)]

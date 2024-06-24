@@ -13,7 +13,7 @@ pygame.init()
 class BaseEnemy(ABC):
 
     @abstractmethod
-    def draw(self, *args):
+    def create(self, *args):
         pass
 
     @abstractmethod
@@ -68,11 +68,11 @@ class GhostEnemy(BaseEnemy):
         self._hitbox: pygame.Rect = pygame.Rect((0, 0), (80, 110))
         self._x, self._y = 0, 0
         self.speed: int | float = 2
-        self._health: int = 20
+        self._health: int = 2
         self._isDrawn: bool = False
         self._damage: int = 1
 
-    def draw(self, playerX: int | float, playerY: int | float, cameraX: int | float, cameraY: int | float,
+    def create(self, playerX: int | float, playerY: int | float, cameraX: int | float, cameraY: int | float,
              tileSize: tuple[int], tileAmount: tuple[int], screenSize: tuple[int]):
         width, height = tileSize[0] * tileAmount[0], tileSize[1] * tileAmount[1]
         side = random.randint(0, 3)
@@ -88,7 +88,6 @@ class GhostEnemy(BaseEnemy):
         else:
             self._x = screenSize[0] // 2 - playerX
             self._y = random.randint(0, height - self._hitbox.height)
-        self._screen.blit(self.enemy_image, (self._x - cameraX, self._y - cameraY))
         self._hitbox.topleft = (self._x, self._y)
 
     def updateCoordinates(self, player: player.Player, x: int | float, y: int | float, cameraX: int, cameraY: int):
@@ -164,7 +163,7 @@ class ZombieEnemy(BaseEnemy):
         self._isDrawn: bool = False
         self._damage: int | float = 3.5
 
-    def draw(self, playerX: int | float, playerY: int | float, cameraX: int | float, cameraY: int | float,
+    def create(self, playerX: int | float, playerY: int | float, cameraX: int | float, cameraY: int | float,
              tileSize: tuple[int], tileAmount: tuple[int], screenSize: tuple[int]):
         width, height = tileSize[0] * tileAmount[0], tileSize[1] * tileAmount[1]
         side = random.randint(0, 3)
@@ -180,7 +179,6 @@ class ZombieEnemy(BaseEnemy):
         else:
             self._x = screenSize[0] // 2 - playerX
             self._y = random.randint(0, height - self._hitbox.height)
-        self._screen.blit(self.enemy_image, (self._x - cameraX, self._y - cameraY))
         self._hitbox.topleft = (self._x, self._y)
 
     def updateCoordinates(self, player: player.Player, x: int | float, y: int | float, cameraX: int, cameraY: int):

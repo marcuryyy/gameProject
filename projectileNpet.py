@@ -81,26 +81,37 @@ class BabyGhost:
         self._attackRadius: int = 250
         self._speed: int = 2
         self._damage: int = 5
+        self._attackCD: int = 100
+        self._lastAttackTick: int = 0
+        self._canAttack = True
+        self._lastVectorLength: float = 1000000
 
-    def followPlayer(self, x: int, y: int, cameraX: int, cameraY: int, enemies: list[Enemy.BaseEnemy]):
+    def followPlayer(self, x: int, y: int, enemies: list[Enemy.BaseEnemy]):
         if not self._isAttacking:
             self._hitbox.x, self._hitbox.y = x - self._offset, y - self._offset * 1.5
-            self._screen.blit(self.image, (self._hitbox.x - cameraX, self._hitbox.y - cameraY))
             self.findClosestEnemy(enemies)
         else:
-            self.attackEnemy(cameraX, cameraY)
+            self.attackEnemy(enemies)
 
-    def attackEnemy(self, cameraX: int, cameraY: int):
+    def attackEnemy(self, enemies: list[Enemy.BaseEnemy]):
+        if self._focusEnemy not in enemies:
+            self._isAttacking = False
+            self._focusEnemy = None
+            return
         enemy_x, enemy_y = self._focusEnemy.getHitbox().topleft
         dx, dy = enemy_x - self._hitbox.x, enemy_y - self._hitbox.y
         vector_length = math.hypot(dx, dy)
-        dx, dy = dx / vector_length, dy / vector_length
-        self._hitbox.x += dx * self._speed
-        self._hitbox.y += dy * self._speed
-        self.processAnimation(enemy_x)
-        if self._focusEnemy.getHP() < 1:
-            self._isAttacking = False
-            self._focusEnemy = None
+        if vector_length == 0:
+            vector_length = self._lastVectorLength
+        else:
+            self._lastVectorLength = vector_length
+            dx, dy = dx / vector_length, dy / vector_length
+            self._hitbox.x += dx * self._speed
+            self._hitbox.y += dy * self._speed
+            self.processAnimation(enemy_x)
+            if self._focusEnemy.getHP() < 1:
+                self._isAttacking = False
+                self._focusEnemy = None
 
     def findClosestEnemy(self, enemies: list[Enemy.BaseEnemy]):
         for enemy in enemies:
@@ -133,3 +144,15 @@ class BabyGhost:
 
     def getImage(self) -> pygame.Surface:
         return self.image
+
+    def getCD(self) -> int:
+        return self._attackCD
+
+    def setLastAttackTick(self, ticks: int):
+        self._lastAttackTick = ticks
+
+    def getLastAttackTick(self) -> int:
+        return self._lastAttackTick
+
+    def setCanAttack(self, state: bool):
+        self._canAttack = state

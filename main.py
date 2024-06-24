@@ -35,10 +35,10 @@ class MainMenu:
     def __init__(self):
         self._screen: pygame.Surface = pygame.display.set_mode((750, 750))
         self._screen.fill("Black")
-        self._playbutton = PlayButton(self._screen, 250, 50)
-        self._skillsButton = SkillsButton(self._screen, 250, 50)
-        self._SettingsButton = SettingsButton(self._screen, 250, 50)
-        self._QuitButton = QuitButton(self._screen, 250, 50)
+        self._playbutton: PlayButton = PlayButton(self._screen, 250, 50)
+        self._skillsButton: SkillsButton = SkillsButton(self._screen, 250, 50)
+        self._SettingsButton: SettingsButton = SettingsButton(self._screen, 250, 50)
+        self._QuitButton: QuitButton = QuitButton(self._screen, 250, 50)
         self._buttons: list[Button] = [self._playbutton, self._skillsButton, self._SettingsButton, self._QuitButton]
         self._runMenu: bool = True
 
@@ -77,17 +77,17 @@ class SkillsScreen:
     def __init__(self):
         self._screen: pygame.Surface = pygame.display.set_mode((750, 750))
         self._runLoadingScreen: bool = False
-        self._settingsLabel = SkillsLabel(self._screen)
+        self._settingsLabel: SkillsLabel = SkillsLabel(self._screen)
         self._runSkillsScreen: bool = False
-        self._speedIcon = pygame.image.load("skillsIcons/speed.png")
-        self._buyButton = BuyButton(self._screen, 200, 50, "speed")
-        self._whiteBackground = pygame.Surface((96, 96))
+        self._speedIcon: pygame.Surface = pygame.image.load("skillsIcons/speed.png")
+        self._buyButton: BuyButton = BuyButton(self._screen, 200, 50, "speed")
+        self._whiteBackground: pygame.Surface = pygame.Surface((96, 96))
         self._whiteBackground.fill("white")
-        self._speedIconRect = self._speedIcon.get_rect(
+        self._speedIconRect: pygame.Rect = self._speedIcon.get_rect(
             center=(self._screen.get_width() // 2, self._screen.get_height() // 2))
-        self._whiteRect = self._whiteBackground.get_rect(
+        self._whiteRect: pygame.Rect = self._whiteBackground.get_rect(
             center=(self._screen.get_width() // 2, self._screen.get_height() // 2))
-        self._backButton = BackButton(self._screen, 250, 50)
+        self._backButton: BackButton = BackButton(self._screen, 250, 50)
         self._buttons: list[Button] = [self._backButton, self._buyButton]
 
     def runSettings(self):
@@ -125,7 +125,7 @@ class LoadingScreen:
     def __init__(self):
         self._screen: pygame.Surface = pygame.display.set_mode((750, 750))
         self._runLoadingScreen: bool = False
-        self._loadingLabel = LoadingLabel(self._screen)
+        self._loadingLabel: LoadingLabel = LoadingLabel(self._screen)
         self._loadingSquare: pygame.Rect = pygame.Rect(275, 275, 200, 200)
         self._loadingSquareSurface: pygame.Surface = pygame.Surface(
             (self._loadingSquare.width, self._loadingSquare.height))
@@ -133,7 +133,8 @@ class LoadingScreen:
 
     def runLoadingScreen(self):
         self._screen.fill("black")
-        self._loadingLabel.draw()
+        utils = self._loadingLabel.getUtils()
+        TextViewer.drawLabels(self._screen, *utils)
         pygame.draw.rect(self._screen, "white", self._loadingSquare, 2)
         pygame.display.update()
         self._mapView = View.GameSceneView()
@@ -176,14 +177,14 @@ class SettingsScreen:
     def __init__(self):
         self._screen: pygame.Surface = pygame.display.set_mode((750, 750))
         self._runLoadingScreen: bool = False
-        self._settingsLabel = SettingsLabel(self._screen)
-        self._musicLabelText = MusicLabelText(self._screen)
-        self._labels = [self._settingsLabel, self._musicLabelText]
-        self._musicVolumeLevel = MusicVolumeLevel(self._screen)
+        self._settingsLabel: SettingsLabel = SettingsLabel(self._screen)
+        self._musicLabelText: MusicLabelText = MusicLabelText(self._screen)
+        self._labels: list[TextLabel] = [self._settingsLabel, self._musicLabelText]
+        self._musicVolumeLevel: MusicVolumeLevel = MusicVolumeLevel(self._screen)
         self._runSettingsScreen: bool = False
-        self._backButton = BackButton(self._screen, 250, 50)
-        self._decreaseMusicVolume = DecreaseMusicVolume(self._screen, 50, 50)
-        self._increaseMusicVolume = IncreaseMusicVolume(self._screen, 50, 50)
+        self._backButton: BackButton = BackButton(self._screen, 250, 50)
+        self._decreaseMusicVolume: DecreaseMusicVolume = DecreaseMusicVolume(self._screen, 50, 50)
+        self._increaseMusicVolume: IncreaseMusicVolume = IncreaseMusicVolume(self._screen, 50, 50)
         self._buttons: list[Button] = [self._backButton, self._decreaseMusicVolume, self._increaseMusicVolume]
 
     def runSettings(self):
@@ -224,8 +225,8 @@ class SettingsScreen:
 class PauseMenu:
     def __init__(self):
         self._screen: pygame.Surface = mainmenu.getScreen()
-        self._ResumeButton = ResumeButton(self._screen, 250, 50)
-        self._MenuButton = BackToMenuButton(self._screen, 250, 50)
+        self._ResumeButton: ResumeButton = ResumeButton(self._screen, 250, 50)
+        self._MenuButton: BackToMenuButton = BackToMenuButton(self._screen, 250, 50)
         self._buttons: list[Button] = [self._ResumeButton, self._MenuButton]
         self._runMenu: bool = False
 
@@ -259,8 +260,9 @@ class PauseMenu:
             self.runMenu()
 
     def drawButtons(self):
-        self._ResumeButton.draw()
-        self._MenuButton.draw()
+        for button in self._buttons:
+            utils = button.getUtils()
+            ButtonsViewer.drawButtons(self._screen, *utils)
 
 
 class GameScene:
@@ -271,8 +273,8 @@ class GameScene:
         self._screen = mainmenu.getScreen()
         self._running: bool = False
 
-        self._screen_rect = pygame.display.get_surface().get_rect()
-        self._camera_rect = pygame.Rect(0, 0, self._screen_rect.width, self._screen_rect.height)
+        self._screen_rect: pygame.Rect = pygame.display.get_surface().get_rect()
+        self._camera_rect: pygame.Rect = pygame.Rect(0, 0, self._screen_rect.width, self._screen_rect.height)
         self._player: player.Player = player.Player(self._screen)
         self._playerX: int = self._player.getCoordinates()[0]
         self._playerY: int = self._player.getCoordinates()[1]
@@ -292,7 +294,7 @@ class GameScene:
 
         self._paused: bool = False
         self._lastShotTicks: int = 0
-        self._coinsLabel = player.CoinsAmount()
+        self._coinsLabel = player.Coins()
 
     def run_game(self):
         clock.tick(60)
@@ -416,7 +418,7 @@ class GameScene:
         closest_distance = float('inf')
         for enemy in self._enemies:
             if enemy.getDrawState() is not True:
-                enemy.draw(self._playerX, self._playerY, self._camera_rect.x, self._camera_rect.y,
+                enemy.create(self._playerX, self._playerY, self._camera_rect.x, self._camera_rect.y,
                            self._mapCreator.getTileSize(), self._mapCreator.getTileAmount(),
                            self._screen.get_size())
                 enemy.setDrawState()
@@ -606,7 +608,7 @@ class DecreaseMusicVolume(Button):
 
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
-            if settings.getVolume() > 0:
+            if settings.getVolume() > 0.01:
                 settings.setVolume(settings.getVolume() - 0.05)
                 self._screen.fill("black", self._fill_rect)
                 settingsScreen.drawUpdateText()
@@ -700,6 +702,7 @@ class BuyButton(Button):
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos) and gameScene.getPlayer().getCoins() >= 100:
             gameScene.getPlayer().setMaxSpeed(5)
+            gameScene.getPlayer().decreaseCoins(100)
             pygame.mixer_music.load("music/buySound.mp3")
             pygame.mixer.music.set_volume(settings.getVolume())
             pygame.mixer_music.play()
@@ -774,6 +777,7 @@ class MusicVolumeLevel(TextLabel):
     def updateText(self):
         self._text: pygame.Surface = self._font.render(f"{round(settings.getVolume() * 100, 1)}", True, "white")
         self._text_rectangle: pygame.Rect = self._text.get_rect(center=(self._screen.get_size()[0] - 140, 175))
+
 
 settings = Settings()
 mainmenu = MainMenu()
