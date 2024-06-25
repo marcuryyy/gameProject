@@ -310,6 +310,7 @@ class GameScene:
         self._controller = Controller.Controller(self._player, self._enemies, self._map, self._tileMap,
                                                  self._projectiles, self._pets)
         self._entityViewer = View.EntityView(self._screen, self._player, self._enemies, self._projectiles, self._pets)
+        self.restartGame()
         while self._running and not self._paused:
 
             pygame.display.update()
@@ -356,11 +357,6 @@ class GameScene:
 
         self._paused: bool = False
         self._lastShotTicks: int = 0
-
-        mainmenu.setState(True)
-        gameScene.setState(False)
-        gameScene.setPauseState(False)
-        mainmenu.runMenu()
 
     def setDifficulty(self, player_health: int, player_max_health: int, ticks: int) -> int:
         difficulty: list = ["Very Easy", "Easy", "Medium", "Hard", "Very Hard", "Nearly Impossible", "Impossible"]
@@ -474,7 +470,10 @@ class GameScene:
             self._entityViewer.updatePlayer(self._camera_rect.x, self._camera_rect.y)
         else:
             pygame.mixer.music.stop()
-            self.restartGame()
+            mainmenu.setState(True)
+            gameScene.setState(False)
+            gameScene.setPauseState(False)
+            mainmenu.runMenu()
 
     def processPets(self):
         for pet in self._pets:
