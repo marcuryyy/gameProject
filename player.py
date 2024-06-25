@@ -49,7 +49,7 @@ class Player:
         self._isRunningRight = self._isRunningLeft = False
 
     def setSpeedIfWalkingDiagonally(self):
-        self._speed = self._speed / (2 * 0.5)
+        self._speed = self._speed / (2 ** 0.5)
 
     def processIdleAnimation(self):
         self._idleFrame += 0.05
