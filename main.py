@@ -304,9 +304,7 @@ class GameScene:
         pygame.event.clear()
         self._mapCreator = loadingScreen.getMapUtils()
         self._map, self._tileMap = self._mapCreator.getMap()
-        pygame.mixer.music.load("music/kevin-macleod-8bit-dungeon-boss.mp3")
-        pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(settings.getVolume())
+        self.playMusic()
         self._controller = Controller.Controller(self._player, self._enemies, self._map, self._tileMap,
                                                  self._projectiles, self._pets)
         self._entityViewer = View.EntityView(self._screen, self._player, self._enemies, self._projectiles, self._pets)
@@ -485,6 +483,11 @@ class GameScene:
 
     def getPlayer(self):
         return self._player
+
+    def playMusic(self):
+        pygame.mixer.music.load("music/kevin-macleod-8bit-dungeon-boss.mp3")
+        pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(settings.getVolume())
 
 
 class Button(ABC):
@@ -672,9 +675,7 @@ class ResumeButton(Button):
 
     def do_on_click(self, event: pygame.event.Event):
         if self._button.collidepoint(event.pos):
-            pygame.mixer.music.load("music/kevin-macleod-8bit-dungeon-boss.mp3")
-            pygame.mixer.music.play(-1)
-            pygame.mixer.music.set_volume(settings.getVolume())
+            gameScene.playMusic()
             gameScene.setPauseState(False)
             pauseMenu.setState(False)
 
